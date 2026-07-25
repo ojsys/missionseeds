@@ -12,6 +12,18 @@ $receive  = get_list_items('receive', !$isAdmin);
 $deadlineDate = get_setting('deadline_date', '2026-07-31');
 $daysLeft     = days_until($deadlineDate);
 $heroImage    = get_setting('hero_image', 'assets/uploads/hero.jpg');
+// Normalize hero URL to root-relative + absolute. Fallback to default if file missing locally.
+$heroDefault = 'assets/uploads/hero.jpg';
+if (strpos($heroImage, 'http') === 0) {
+    $heroSrc = $heroImage;
+} else {
+    $heroRel = ltrim($heroImage, '/');
+    if (!file_exists(__DIR__ . '/' . $heroRel)) {
+        $heroRel = ltrim($heroDefault, '/');
+    }
+    $ts = @filemtime(__DIR__ . '/' . $heroRel);
+    $heroSrc = rtrim(SITE_URL, '/') . '/' . $heroRel . ($ts ? '?v=' . $ts : '');
+}
 $whatsapp     = get_setting('whatsapp_number', '');
 $whatsappDisp = get_setting('whatsapp_display', '');
 $eoiUrl       = get_setting('eoi_form_url', '#');
@@ -64,7 +76,7 @@ $eoiUrl       = get_setting('eoi_form_url', '#');
         </div>
       </div>
       <div class="hero-photo">
-        <img id="hero-img" src="<?= e($heroImage) ?>" alt="Church members standing together in Jos, with a young coffee seedling planted in the foreground">
+        <img id="hero-img" src="<?= e($heroSrc) ?>" alt="Church members standing together in Jos, with a young coffee seedling planted in the foreground">
         <div class="hero-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.4"/></svg>
           Pilot · Jos, Plateau State

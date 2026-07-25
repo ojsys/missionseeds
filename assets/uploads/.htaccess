@@ -1,24 +1,23 @@
 # ============================================================================
 # assets/uploads — images ONLY
 # Never execute scripts here. Hardened for Hostinger LiteSpeed / Apache.
+# Uses SetEnvIf-based allowlist so the rule ordering is unambiguous and the
+# "deny everything else" actually wins for non-images (no directive merge bugs).
 # ============================================================================
 
-# 1. WHITELIST: only image MIME types served
-<FilesMatch "^(?i).*\.(png|jpe?g|gif|webp|avif|svg|ico|bmp)$">
-  Require all granted
-  Order Allow,Deny
-  Allow from all
-</FilesMatch>
+# 1. Environment-flag ALLOWLIST — only real image extensions match this env var.
+#    (?i) = case-insensitive so .JPG / .jpg / .Png all work.
+SetEnvIfNoCase Request_URI "\.(png|jpe?g|gif|webp|avif|svg|ico|bmp)$" SAFE_UPLOAD_IMAGE
 
-# 2. BLACKLIST: EVERYTHING ELSE (scripts, executables, .htaccess, upload shells)
-<FilesMatch "">
-  Require all denied
-  Order Deny,Allow
-  Deny from all
-</FilesMatch>
+# 2. ACCESS CONTROL — one rule, one outcome.
+#    If SAFE_UPLOAD_IMAGE is set → Allow.
+#    Otherwise → Require all denied.
+<RequireAll>
+  Require env SAFE_UPLOAD_IMAGE
+</RequireAll>
 
-# Block common web-shell extensions (belt+suspenders)
-<FilesMatch "\.(?i:php\d?|phtml|phar|pht|pl|py|rb|cgi|sh|bash|zsh|ksh|jsp|jspx|asp|aspx|ashx|cfm|shtml|hta|htaccess|ini|conf|env|sql|md|txt)$">
+# Explicit deny for web shell extensions (belt+suspenders, even if case differs)
+<FilesMatch "\.(?i:php\d?|phtml|phar|pht|pl|py|rb|cgi|sh|bash|zsh|ksh|jsp|jspx|asp|aspx|ashx|cfm|shtml|hta|htaccess|ini|conf|env|sql|md|htpasswd)$">
   Require all denied
 </FilesMatch>
 
