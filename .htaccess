@@ -1,0 +1,142 @@
+# ============================================================================
+# Seedlings CMS — Production .htaccess
+# Domain: https://missionseedlings.com
+# Hostinger hPanel / LiteSpeed Enterprise / Apache 2.4+
+# ============================================================================
+
+# -----------------------------
+# 1. FORCE HTTPS + NON-WWW canonical
+# -----------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # HTTP -> HTTPS (any host)
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^(.*)$ https://missionseedlings.com/$1 [R=301,L]
+
+  # www.missionseedlings.com -> missionseedlings.com
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+</IfModule>
+
+# -----------------------------
+# 2. SECURITY HEADERS
+# -----------------------------
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), fullscreen=(self)"
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Remove server signatures (belt+suspenders)
+  Header unset X-Powered-By
+</IfModule>
+
+# Hide Apache version + directory listings
+ServerTokens Prod
+Options -Indexes -MultiViews
+
+# -----------------------------
+# 3. BLOCK SENSITIVE FILES
+# -----------------------------
+<FilesMatch "\.(sql|md|ini|log|bak|backup|orig|swp|env|json)$">
+  Require all denied
+</FilesMatch>
+
+# Block any dotfile (.htaccess, .env, .git, etc.)
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+# Block composer / package files if ever present
+<FilesMatch "^(composer|package|package-lock|yarn|bower|gulpfile|gruntfile)\.">
+  Require all denied
+</FilesMatch>
+
+# install.sql defense in depth (also matched above)
+<Files "install.sql">
+  Require all denied
+</Files>
+
+# README defense in depth
+<Files "README.md">
+  Require all denied
+</Files>
+
+# -----------------------------
+# 4. DEFLATE / BROTLI COMPRESSION
+# -----------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml font/woff font/woff2 font/ttf application/vnd.ms-fontobject
+</IfModule>
+
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/plain text/html text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml font/woff font/woff2 font/ttf application/vnd.ms-fontobject
+</IfModule>
+
+# -----------------------------
+# 5. CACHE HEADERS — STATIC ASSETS
+# -----------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault                                      "access plus 1 month"
+
+  # HTML — no cache (we change content via admin)
+  ExpiresByType text/html                             "access plus 0 seconds"
+
+  # Data
+  ExpiresByType application/json                      "access plus 0 seconds"
+  ExpiresByType application/xml                       "access plus 0 seconds"
+  ExpiresByType text/xml                              "access plus 0 seconds"
+
+  # Feed
+  ExpiresByType application/rss+xml                   "access plus 1 hour"
+
+  # Favicon (rarely changes)
+  ExpiresByType image/vnd.microsoft.icon              "access plus 1 year"
+  ExpiresByType image/x-icon                           "access plus 1 year"
+
+  # Images
+  ExpiresByType image/png                              "access plus 1 year"
+  ExpiresByType image/gif                              "access plus 1 year"
+  ExpiresByType image/jpeg                             "access plus 1 year"
+  ExpiresByType image/jpg                              "access plus 1 year"
+  ExpiresByType image/webp                             "access plus 1 year"
+  ExpiresByType image/avif                             "access plus 1 year"
+  ExpiresByType image/svg+xml                          "access plus 1 year"
+
+  # CSS + JS — cache bust with querystrings in admin tools
+  ExpiresByType text/css                               "access plus 1 month"
+  ExpiresByType text/javascript                        "access plus 1 month"
+  ExpiresByType application/javascript                 "access plus 1 month"
+  ExpiresByType application/x-javascript               "access plus 1 month"
+
+  # Fonts
+  ExpiresByType font/woff                              "access plus 1 year"
+  ExpiresByType font/woff2                             "access plus 1 year"
+  ExpiresByType application/font-woff                  "access plus 1 year"
+  ExpiresByType application/font-woff2                 "access plus 1 year"
+  ExpiresByType application/vnd.ms-fontobject          "access plus 1 year"
+  ExpiresByType application/x-font-ttf                 "access plus 1 year"
+  ExpiresByType font/opentype                          "access plus 1 year"
+</IfModule>
+
+# Cache-Control header fallback (no mod_expires)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(ico|webp|avif|jpg|jpeg|png|gif|svg|woff2?|ttf|eot|otf)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  <FilesMatch "\.(php|html)$">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+</IfModule>
+
+# -----------------------------
+# 6. DEFAULT DOCUMENT
+# -----------------------------
+DirectoryIndex index.php index.html
