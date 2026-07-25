@@ -8,23 +8,74 @@ $SETTABLE = [
     'deadline_date', 'eoi_form_url', 'eoi_button_label',
     'whatsapp_number', 'whatsapp_display',
 ];
+// hero_image is set via file upload handler below, not $_POST text.
 
 $flash = '';
 $flashType = '';
+$DEFAULT_HERO = 'assets/uploads/hero.jpg';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_check($_POST['csrf'] ?? null)) {
         $flash = 'Session expired — please try again.';
         $flashType = 'error';
     } else {
+        // --- (1) File upload: hero image -----------------------------------------
+        if (isset($_FILES['hero_image_upload']) && is_uploaded_file($_FILES['hero_image_upload']['tmp_name'])) {
+            try {
+                $file = $_FILES['hero_image_upload'];
+                if ($file['error'] !== UPLOAD_ERR_OK) {
+                    throw new RuntimeException('Hero image upload error code ' . $file['error']);
+                }
+                $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime  = finfo_file($finfo, $file['tmp_name']);
+                finfo_close($finfo);
+                if (!isset($allowed[$mime])) {
+                    throw new RuntimeException('Hero image must be a JPG, PNG, or WEBP file.');
+                }
+                if ($file['size'] > 8 * 1024 * 1024) {
+                    throw new RuntimeException('Hero image must be under 8MB (for fast page load — try compressing with squoosh.app first).');
+                }
+                if (!is_dir(UPLOAD_DIR)) {
+                    mkdir(UPLOAD_DIR, 0755, true);
+                }
+                $filename = 'hero-image-' . time() . '.' . $allowed[$mime];
+                $dest     = UPLOAD_DIR . '/' . $filename;
+                if (!move_uploaded_file($file['tmp_name'], $dest)) {
+                    throw new RuntimeException('Could not save the uploaded hero image (check assets/uploads/ permissions).');
+                }
+                set_setting('hero_image', 'assets/uploads/' . $filename);
+                $flash = 'Hero image updated.';
+                $flashType = '';
+            } catch (Throwable $e) {
+                $flash = $e->getMessage();
+                $flashType = 'error';
+            }
+        }
+
+        // --- (2) Action: reset hero to default ------------------------------------
+        if (isset($_POST['reset_hero']) && $_POST['reset_hero'] === '1') {
+            set_setting('hero_image', $DEFAULT_HERO);
+            $flash = 'Hero image reset to default.';
+            $flashType = '';
+        }
+
+        // --- (3) Normal text settings ---------------------------------------------
         foreach ($SETTABLE as $key) {
             if (isset($_POST[$key])) {
                 set_setting($key, trim((string) $_POST[$key]));
             }
         }
-        $flash = 'Settings saved.';
+
+        if ($flash === '') {
+            $flash = 'Settings saved.';
+        }
     }
 }
+
+$heroImage    = get_setting('hero_image', $DEFAULT_HERO);
+$heroImageUrl = (strpos($heroImage, 'http') === 0) ? $heroImage : rtrim(SITE_URL, '/') . '/' . ltrim($heroImage, '/');
+$isDefaultHero = ($heroImage === $DEFAULT_HERO);
 
 $pageTitle = 'Settings';
 $active = 'settings';
@@ -41,8 +92,32 @@ include __DIR__ . '/partials/header.php';
   <div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div>
 <?php endif; ?>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+
+  <div class="panel" id="appearance">
+    <h2>Appearance — Hero photo</h2>
+    <p class="hint">The large photo shown at the top of the page next to the headline. Recommendation: 1600×1100px JPG, under 600KB, with people on the right side of the image (copy sits on the left).</p>
+
+    <div class="hero-preview-wrap">
+      <div class="hero-preview-box">
+        <img id="hero-preview-img" src="<?= e($heroImageUrl) ?>" alt="Current hero photo preview"
+             onerror="this.onerror=null;this.src='<?= e(rtrim(SITE_URL, '/')) ?>/<?= e($DEFAULT_HERO) ?>';">
+        <div class="hero-preview-badge"><?= $isDefaultHero ? 'Default photo' : 'Custom photo' ?></div>
+      </div>
+      <div class="hero-upload-controls">
+        <label for="hero_image_upload" class="btn">Choose new photo…</label>
+        <input type="file" id="hero_image_upload" name="hero_image_upload"
+               accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display:none;">
+        <button type="submit" name="reset_hero" value="1" class="btn secondary"
+                onclick="return confirm('Reset hero photo back to the default?')">Reset to default</button>
+        <div class="form-row" style="margin-top:16px; margin-bottom:0;">
+          <label style="margin-bottom:6px;">File format</label>
+          <p class="help" style="margin:0;">JPG, PNG, or WEBP — max 8MB. Smaller = faster landing page.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="panel">
     <h2>Application</h2>
@@ -98,5 +173,22 @@ include __DIR__ . '/partials/header.php';
 
   <button type="submit" class="btn">Save settings</button>
 </form>
+
+<script>
+  // Live preview before upload (no round-trip to server)
+  (function(){
+    var input = document.getElementById('hero_image_upload');
+    var preview = document.getElementById('hero-preview-img');
+    if(!input || !preview) return;
+    input.addEventListener('change', function(){
+      var file = input.files && input.files[0];
+      if(!file) return;
+      if(!/image\/(jpeg|png|webp)/.test(file.type)) return;
+      var reader = new FileReader();
+      reader.onload = function(e){ preview.src = e.target.result; };
+      reader.readAsDataURL(file);
+    });
+  })();
+</script>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

@@ -43,6 +43,11 @@ include __DIR__ . '/partials/header.php';
     <h3>Edit page copy</h3>
     <p>Open the live site and click any headline or paragraph to edit it in place, WordPress-style.</p>
   </a>
+  <a class="admin-card" href="settings.php#appearance">
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-8 8"/></svg></div>
+    <h3>Hero photo</h3>
+    <p>Upload, preview, or reset the large photo at the top of the landing page.</p>
+  </a>
   <a class="admin-card" href="lists.php">
     <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg></div>
     <h3>Manage lists</h3>
