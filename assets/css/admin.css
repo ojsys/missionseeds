@@ -195,3 +195,19 @@ body.admin{
 .hero-upload-controls .btn.secondary:hover{
   background:var(--cream-soft);
 }
+
+/* Partner logo thumbnail in the admin table */
+.partner-thumb{
+  width:84px; height:44px;
+  object-fit:contain; object-position:left center;
+  background:#fff;
+  border:1px solid var(--cream-line);
+  border-radius:var(--radius-sm);
+  padding:4px;
+}
+.form-row input[type=file]{
+  font-family:var(--body); font-size:14px;
+  padding:9px 10px; width:100%;
+  border:1px solid var(--cream-line); border-radius:var(--radius-sm);
+  background:#fff;
+}

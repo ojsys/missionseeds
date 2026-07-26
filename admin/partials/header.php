@@ -21,6 +21,7 @@ $active = $active ?? '';
   <div class="admin-nav">
     <a href="index.php" class="<?= $active === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
     <a href="lists.php" class="<?= $active === 'lists' ? 'active' : '' ?>">Lists</a>
+    <a href="partners.php" class="<?= $active === 'partners' ? 'active' : '' ?>">Partners</a>
     <a href="settings.php" class="<?= $active === 'settings' ? 'active' : '' ?>">Settings</a>
     <a href="change-password.php" class="<?= $active === 'password' ? 'active' : '' ?>">Password</a>
     <a href="../index.php" class="view-site" target="_blank">View site ↗</a>

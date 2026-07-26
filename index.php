@@ -8,6 +8,9 @@ $isAdmin = admin_logged_in();
 
 $criteria = get_list_items('criteria', !$isAdmin);
 $receive  = get_list_items('receive', !$isAdmin);
+// Always visible-only, even for admins: unlike the criteria/receive lists there
+// is no inline "hidden" affordance here, so showing hidden logos would mislead.
+$partners = get_partners(true);
 
 $deadlineDate = get_setting('deadline_date', '2026-07-31');
 $daysLeft     = days_until($deadlineDate);
@@ -198,7 +201,34 @@ $eoiUrl       = get_setting('eoi_form_url', '#');
     </div>
   </section>
 
-  <?= divider('divider-to-soil', '#332217') ?>
+  <?php if ($partners): ?>
+  <!-- ============ PARTNERS ============ -->
+  <section id="partners">
+    <div class="section-inner reveal">
+      <div class="leaf-node" data-vine-node><?= leaf_svg(2) ?></div>
+      <div class="section-head">
+        <div class="eyebrow"><?= editable('partners_eyebrow', $isAdmin) ?></div>
+        <h2><?= editable('partners_heading', $isAdmin) ?></h2>
+        <p><?= editable('partners_intro', $isAdmin, true) ?></p>
+      </div>
+      <div class="partners-grid">
+        <?php foreach ($partners as $p): ?>
+          <?php if (!empty($p['link_url'])): ?>
+          <a class="partner-logo" href="<?= e($p['link_url']) ?>" target="_blank" rel="noopener noreferrer">
+            <img src="<?= e($p['logo_path']) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
+          </a>
+          <?php else: ?>
+          <div class="partner-logo">
+            <img src="<?= e($p['logo_path']) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
+          </div>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <?= divider('divider-to-soil', '#332217', $partners ? '#f7f2e4' : null) ?>
 
   <!-- ============ HARVEST / CTA ============ -->
   <section id="interest" class="harvest">

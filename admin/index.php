@@ -9,6 +9,7 @@ $deadline = get_setting('deadline_date', '');
 $days = $deadline ? days_until($deadline) : null;
 $criteriaCount = count(get_list_items('criteria', false));
 $receiveCount  = count(get_list_items('receive', false));
+$partnerCount  = count(get_partners(false));
 
 include __DIR__ . '/partials/header.php';
 ?>
@@ -35,6 +36,11 @@ include __DIR__ . '/partials/header.php';
     <h2 style="margin-top:8px;"><?= $receiveCount ?> items</h2>
     <p class="hint" style="margin-bottom:0;">Shown in the benefits grid</p>
   </div>
+  <div class="panel" style="margin-bottom:0;">
+    <div class="eyebrow">Partners</div>
+    <h2 style="margin-top:8px;"><?= $partnerCount ?> <?= $partnerCount === 1 ? 'logo' : 'logos' ?></h2>
+    <p class="hint" style="margin-bottom:0;">Shown in the partners strip</p>
+  </div>
 </div>
 
 <div class="admin-grid">
@@ -52,6 +58,11 @@ include __DIR__ . '/partials/header.php';
     <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg></div>
     <h3>Manage lists</h3>
     <p>Add, reorder, hide, or remove items in "Who should apply" and "What churches receive".</p>
+  </a>
+  <a class="admin-card" href="partners.php">
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 20h5v-2a3 3 0 00-4-2.8M9 20H2v-2a5 5 0 016.6-4.7"/><circle cx="9" cy="7" r="4"/><path d="M16 3.1a4 4 0 010 7.8"/></svg></div>
+    <h3>Partners</h3>
+    <p>Upload partner logos, reorder them, and choose which appear in the partners strip.</p>
   </a>
   <a class="admin-card" href="settings.php">
     <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.2a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.2a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg></div>

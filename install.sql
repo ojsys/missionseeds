@@ -20,6 +20,17 @@ CREATE TABLE IF NOT EXISTS list_items (
   KEY group_key_idx (group_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS partners (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(160) NOT NULL,
+  logo_path   VARCHAR(255) NOT NULL,
+  link_url    VARCHAR(500) DEFAULT NULL,
+  sort_order  INT NOT NULL DEFAULT 0,
+  is_visible  TINYINT(1) NOT NULL DEFAULT 1,
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY sort_order_idx (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS admin_users (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   username      VARCHAR(60) UNIQUE NOT NULL,
@@ -55,6 +66,10 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 
 ('receive_eyebrow',    '03 — What grows'),
 ('receive_heading',    'What participating churches receive'),
+
+('partners_eyebrow',   'Partners'),
+('partners_heading',   'Growing together'),
+('partners_intro',     'Seedlings grows through partnership — with churches, cooperatives, and organisations investing in Plateau State for the long haul.'),
 
 ('harvest_eyebrow',    '04 — The harvest'),
 ('harvest_heading',    'Join the first Seedlings pilot'),

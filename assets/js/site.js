@@ -70,24 +70,33 @@
      Leaf markers + section reveal
      --------------------------------------------------------------------- */
   function placeLeafNodes(){
-    var lastSecClamp = null;
+    // viewport-space bottom of the last section; converted per-node below
+    var lastSecBottom = null;
     var lastSec = trackWrap.querySelector('section:last-of-type, .harvest:last-of-type');
-    var wrapRect = trackWrap.getBoundingClientRect();
     if(lastSec){
-      var lrLast = lastSec.getBoundingClientRect();
-      lastSecClamp = lrLast.bottom - wrapRect.top - 8;
+      lastSecBottom = lastSec.getBoundingClientRect().bottom;
     }
     document.querySelectorAll('[data-vine-node]').forEach(function(node){
       var section = node.closest('section');
       if(!section) return;
+      // un-hide first: offsetParent is null while display:none, which would
+      // break the measurement on resize for a leaf hidden by a previous run
+      node.style.visibility = '';
+      node.style.display = '';
       var rect = section.getBoundingClientRect();
-      var top = rect.top - wrapRect.top + 44;
-      if(lastSecClamp !== null){
-        top = Math.min(top, lastSecClamp);
+      // top is applied against the node's own containing block (.section-inner is
+      // position:relative), so it must be measured against that same box — not
+      // against #top, or every leaf lands thousands of px below its section and
+      // inflates the document height.
+      var origin = node.offsetParent || section;
+      var oRect = origin.getBoundingClientRect();
+      var top = rect.top - oRect.top + 44;
+      var clamp = lastSecBottom !== null ? lastSecBottom - oRect.top - 8 : null;
+      if(clamp !== null){
+        top = Math.min(top, clamp);
       }
-      if(top < 0) top = 0;
       node.style.top = top + 'px';
-      if(lastSecClamp !== null && top >= lastSecClamp){
+      if(clamp !== null && top >= clamp){
         node.style.visibility = 'hidden';
         node.style.display = 'none';
       } else {
