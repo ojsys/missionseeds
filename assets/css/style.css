@@ -369,27 +369,37 @@ body[data-admin="1"] .add-item-card{ display:flex; }
 /* ==========================================================================
    Partners
    ========================================================================== */
+/* Flex, not grid: an auto-fit grid stretches a partial last row, so a lone
+   logo would balloon to full width. Fixed basis + no grow keeps every cell the
+   same size and centres whatever is left over on the final row. */
 .partners-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
-  gap:20px;
+  display:flex;
+  flex-wrap:wrap;
+  /* left-aligned to match the section heading; a partial last row continues
+     under the first column instead of floating in the middle */
+  justify-content:flex-start;
+  gap:18px;
   margin-top:44px;
-  align-items:stretch;
 }
 .partner-logo{
+  /* grow:0 so cells never stretch; shrink:1 so they still fit narrow screens */
+  flex:0 1 196px;
+  min-width:0;
+  height:104px;
   display:flex; align-items:center; justify-content:center;
-  min-height:112px;
-  padding:22px 24px;
+  padding:18px 20px;
   background:#fff;
   border:1px solid var(--cream-line);
   border-radius:var(--radius-md);
   text-decoration:none;
   transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
+/* Filling the box with object-fit:contain is what makes any upload — square,
+   tall, or a long wordmark — scale to the same footprint without distortion. */
 .partner-logo img{
-  max-width:100%; max-height:60px;
-  width:auto; height:auto;
+  width:100%; height:100%;
   object-fit:contain;
+  object-position:center;
   /* Muted by default so mismatched logos read as one set; true colour on hover. */
   filter:grayscale(1);
   opacity:0.72;
@@ -404,9 +414,9 @@ a.partner-logo:hover img,
 a.partner-logo:focus-visible img{ filter:grayscale(0); opacity:1; }
 
 @media (max-width:640px){
-  .partners-grid{ grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:14px; margin-top:32px; }
-  .partner-logo{ min-height:92px; padding:16px; }
-  .partner-logo img{ max-height:46px; }
+  .partners-grid{ gap:12px; margin-top:32px; }
+  /* basis small enough that two cells + gap always clear a 320px viewport */
+  .partner-logo{ flex-basis:132px; height:84px; padding:14px 16px; }
 }
 
 /* Logos are already muted; don't also animate them behind reduced-motion. */
