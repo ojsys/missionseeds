@@ -1,12 +1,17 @@
 <?php
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/helpers.php';
-require_admin();
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_capability('manage_settings');
 
 $SETTABLE = [
-    'site_title', 'tagline',
-    'deadline_date', 'eoi_form_url', 'eoi_button_label',
+    'site_title', 'tagline', 'footer_address', 'contact_email',
+    'call_status', 'deadline_date', 'eoi_form_url', 'eoi_button_label',
     'whatsapp_number', 'whatsapp_display',
+];
+
+const CALL_STATUSES = [
+    'open'   => 'Open — accepting applications',
+    'closed' => 'Closed — page stays up with a closed notice',
+    'hidden' => 'Hidden — page returns "not found" to the public',
 ];
 // hero_image is set via file upload handler below, not $_POST text.
 
@@ -120,9 +125,24 @@ include __DIR__ . '/partials/header.php';
   </div>
 
   <div class="panel">
-    <h2>Application</h2>
-    <p class="hint">Where the "Apply now" / "Express interest" buttons send people, and the deadline shown on the page.</p>
+    <h2>Call for applications</h2>
+    <p class="hint">
+      The call page at <code><?= e(url('/call')) ?></code> stays in place between cycles.
+      When a new call opens, update the deadline and form link below and set the status back to open.
+    </p>
     <div class="form-grid">
+      <div class="form-row">
+        <label for="call_status">Call status</label>
+        <select id="call_status" name="call_status">
+          <?php foreach (CALL_STATUSES as $k => $label): ?>
+            <option value="<?= e($k) ?>" <?= get_setting('call_status', 'open') === $k ? 'selected' : '' ?>><?= e($label) ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="help">
+          While the call is open, the main navigation button points at the call page. Otherwise it
+          points at the contact page so nobody hits a dead end.
+        </p>
+      </div>
       <div class="form-row">
         <label for="eoi_form_url">Expression of interest form URL</label>
         <input type="url" id="eoi_form_url" name="eoi_form_url" value="<?= e(get_setting('eoi_form_url')) ?>" placeholder="https://forms.gle/...">
@@ -143,7 +163,7 @@ include __DIR__ . '/partials/header.php';
 
   <div class="panel">
     <h2>Contact</h2>
-    <p class="hint">Used by the WhatsApp button in the "Join the pilot" section.</p>
+    <p class="hint">Used on the contact page, in the footer, and by the WhatsApp buttons.</p>
     <div class="two-col">
       <div class="form-row">
         <label for="whatsapp_number">WhatsApp number (digits only, with country code)</label>
@@ -152,6 +172,17 @@ include __DIR__ . '/partials/header.php';
       <div class="form-row">
         <label for="whatsapp_display">WhatsApp number (as displayed)</label>
         <input type="text" id="whatsapp_display" name="whatsapp_display" value="<?= e(get_setting('whatsapp_display')) ?>" placeholder="+234 813 791 2872">
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="form-row">
+        <label for="contact_email">Contact email</label>
+        <input type="email" id="contact_email" name="contact_email" value="<?= e(get_setting('contact_email')) ?>" placeholder="hello@missionseedlings.com">
+        <p class="help">Shown on the contact page and in the footer. Leave blank to hide it.</p>
+      </div>
+      <div class="form-row">
+        <label for="footer_address">Address line</label>
+        <input type="text" id="footer_address" name="footer_address" value="<?= e(get_setting('footer_address')) ?>" placeholder="Jos, Plateau State, Nigeria">
       </div>
     </div>
   </div>

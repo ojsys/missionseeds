@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /portal/
+Disallow: /includes/
+Disallow: /migrations/
+
+Sitemap: https://missionseedlings.com/sitemap.xml

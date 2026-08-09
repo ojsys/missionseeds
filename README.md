@@ -1,116 +1,126 @@
-# Seedlings — CMS-powered site
+# Mission Seedlings — website and CMS
 
-A plain PHP 8 + MySQL site for the Seedlings "Coffee Ministry Mission" campaign,
-built for shared cPanel hosting (no framework, no Composer dependencies).
+The website for Mission Seedlings, a church-based community enterprise platform. The first pilot is
+the Coffee Ministry Mission in Jos, Plateau State.
 
-Almost everything on the page — headlines, paragraphs, the criteria list, the
-benefits grid, the hero photo, the deadline, and the WhatsApp / application
-links — is editable from a friendly admin panel, including inline editing
-directly on the live page (click a headline, type, click away — it saves).
+Plain PHP 8 + MySQL, built for Hostinger shared hosting. No framework, no Composer, no build step.
+
+**Live site:** https://missionseedlings.com
 
 ---
 
-## 1. What's in this folder
+## What's here
+
+A public website of nine sections — home, about, the seven-stage pathway, a growth tracker,
+the cooperative model, participating churches, growth stories, a resource hub, and contact —
+plus an admin dashboard and a portal for church coordinators.
+
+The original call-for-applications landing page is preserved at **/call** and can be reopened for
+each new application cycle from Settings.
 
 ```
-index.php              ← the public page (reads everything from the database)
-config.php              ← your database credentials — EDIT THIS FIRST
-install.sql              ← database schema + starter content — IMPORT THIS
-
-includes/               ← PHP helpers (db connection, auth, content helpers, icon set)
-assets/
-  css/style.css           ← site design
-  css/admin.css           ← admin panel design
-  js/site.js               ← growth-vine animation + inline editing
-  uploads/                 ← hero photo lives here (writable folder)
-
-admin/
-  login.php               ← admin sign-in
-  index.php                ← dashboard
-  lists.php                 ← manage "who should apply" + "what churches receive"
-  settings.php               ← deadline, application link, WhatsApp number, site title
-  change-password.php         ← change the admin password
-  api.php                      ← powers the inline editing on the live page
+index.php        front controller
+config.php       database credentials + SITE_URL — EDIT THIS FIRST
+install.sql      v1 schema — import first
+migrations/      002_platform.sql — import second
+DOCS/            staff guide and developer notes
 ```
 
-## 2. Deploy to cPanel
+---
 
-1. **Create a database.** In cPanel → *MySQL® Databases*: create a database
-   and a database user, then add that user to the database with **All
-   Privileges**. Note the full database name and username — cPanel usually
-   prefixes both with your account name (e.g. `cpaneluser_seedlings`).
+## First-time install
 
-2. **Import the schema.** In cPanel → *phpMyAdmin*, select your new database,
-   go to *Import*, and upload `install.sql`. This creates the tables and
-   loads the current flyer copy as starter content, plus one admin login.
+1. **Create a database.** hPanel → Databases → MySQL Databases. Create a database and a user, then
+   add the user to the database with **All Privileges**. Hostinger prefixes both names with your
+   account prefix (e.g. `u123456789_seedlings`).
 
-3. **Upload the files.** Upload everything in this folder to your domain's
-   web root (e.g. `public_html/` or `public_html/seedlings/` for a subfolder)
-   via cPanel *File Manager* or FTP. Keep the folder structure intact.
+2. **Import the schema**, in this order, via phpMyAdmin → Import:
+   - `install.sql`
+   - `migrations/002_platform.sql`
 
-4. **Edit `config.php`.** Open it in the File Manager code editor and fill in:
-   - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` — from step 1
-   - `SITE_URL` — your live URL, no trailing slash
-   - `APP_KEY` — any random string
+3. **Upload the files** to `public_html/`, keeping the folder structure intact.
 
-5. **Set folder permissions.** Make sure `assets/uploads/` is writable
-   (usually `755` is enough on cPanel; try `775` if photo uploads fail).
+4. **Edit `config.php`** with your `DB_NAME`, `DB_USER`, `DB_PASS`, and confirm `SITE_URL` has no
+   trailing slash. `APP_KEY` is already a random 256-bit value — leave it unless you need to
+   rotate it (doing so signs everyone out).
 
-6. **Log in and change the password.** Visit `yoursite.com/admin/login.php`:
+5. **Make `assets/uploads/` writable** (755, or 775 if uploads fail).
+
+6. **Sign in and change the password immediately** at `/admin/login.php`:
    - Username: `admin`
    - Password: `SeedlingsAdmin2026!`
 
-   Go straight to **Password** in the admin nav and change it. This default
-   is public (it's in this README and in `install.sql`), so don't skip this.
+   That default is published in this file and in `install.sql`, so it must not survive your first
+   login. Then go to **Users** and create a real account for each person.
 
-That's it — the site is live and editable.
+Full deployment detail, including the cron job and backups, is in `DEPLOY-HOSTINGER.md`.
 
-## 3. Editing content
+---
 
-**Text (headlines, paragraphs, deadline note, footer line):** while logged
-in, open the live site itself. Editable text gets a soft outline on hover —
-click it, edit like a normal text field, click elsewhere to save. A brief
-green flash confirms it saved.
+## Documentation
 
-**Hero photo:** hover the hero image while logged in and click *Change
-photo*.
+- **[DOCS/STAFF-GUIDE.md](DOCS/STAFF-GUIDE.md)** — how to run the website day to day. Written for
+  project staff, no technical knowledge assumed.
+- **[DOCS/DEVELOPER.md](DOCS/DEVELOPER.md)** — architecture, roles and capabilities, the privacy
+  model, local setup, and the list of deliberate follow-ups.
+- **[DEPLOY-HOSTINGER.md](DEPLOY-HOSTINGER.md)** — deployment and hosting.
 
-**"Who should apply" and "What churches receive" lists:** you can delete or
-hide items right on the page (small icons appear top-right of each card when
-logged in), or use **Manage lists** in the admin bar for full control —
-add, reorder, hide, or edit any item, including its icon.
+---
 
-**Deadline date, application link, WhatsApp number, site title:** these live
-in **Settings**, since they're structured data (dates, links, phone numbers)
-rather than free text.
+## Accounts
 
-## 4. The "Apply now" / "Expression of interest" button
+Four roles, invite-only — there is no public sign-up anywhere.
 
-This site does **not** host its own application form. Every "Apply now" /
-"Express interest" button links out to whatever URL you set in
-**Settings → Application → Expression of interest form URL** (a Google Form,
-Typeform, JotForm, etc.) and opens it in a new tab. Paste your real form link
-there before launch — it currently points to a placeholder.
+| Role | Area | What they do |
+|---|---|---|
+| Super Admin | `/admin` | Everything, including creating accounts |
+| Project Manager | `/admin` | Churches, pathway, indicators, stories, resources, enquiries, settings |
+| Editor | `/admin` | Website copy and stories |
+| Church Coordinator | `/portal` | Submits updates and photos for their own church, for review |
 
-## 5. Security notes
+Partner organisations have no accounts. They follow the public Growth Tracker, and staff send them
+a fuller update on request — `/tracker` has a print stylesheet so it saves cleanly as a PDF.
 
-- Passwords are hashed (bcrypt via PHP's `password_hash`) — never stored in
-  plain text.
-- All admin actions are protected by session auth + CSRF tokens.
-- `.htaccess` files block direct access to `install.sql` and disable script
-  execution inside `assets/uploads/`. (These rules apply on real Apache/cPanel
-  hosting — they're inert if you test locally with PHP's built-in server.)
-- Change the default admin password immediately (see step 6 above).
-- Consider adding a second admin user only if needed — the current build
-  supports one `admin_users` table row per login; add more rows directly in
-  phpMyAdmin with `password_hash()`-generated hashes if you need multiple
-  editors.
+---
 
-## 6. Local testing (optional, for developers)
+## Privacy
 
-```bash
-php -S localhost:8000
-```
+The site must never publish participant names or phone numbers, household income or data, national
+ID records, individual household GPS coordinates, the project budget, bank details, seed-fund
+balances, staff allowances, or internal cooperative account information.
 
-Point `config.php` at a local MySQL/MariaDB database with `install.sql`
-imported, then visit `http://localhost:8000`.
+The database schema has **no column for any of it** — that data lives only in KoboToolbox. This is
+the project's main structural safeguard, and it should stay that way. See `DOCS/DEVELOPER.md`
+before adding fields.
+
+---
+
+## Editing content
+
+Most page text is edited in place: sign in, open any public page, click a headline or paragraph,
+type, click away. A green flash confirms the save.
+
+Structured things — dates, links, phone numbers, church records, indicators, stories — have their
+own admin screens. See the staff guide.
+
+---
+
+## KoboToolbox
+
+KoboToolbox remains the field data collection system. The website links to authorised forms with
+role-based visibility, and Growth Tracker figures are entered by project managers.
+
+Live API sync is scaffolded and needs no schema change to enable: set `KOBO_API_TOKEN` in
+`config.php`, point an indicator at a form UID, and schedule `bin/kobo-sync.php`.
+
+---
+
+## Security summary
+
+- Passwords hashed with bcrypt; temporary passwords forced to change on first sign-in
+- Role-based access enforced by capability, checked server-side on every page
+- Login throttling, session idle and absolute timeouts, user-agent binding
+- CSRF tokens on every form
+- Uploads validated by real MIME type; SVG refused; script execution disabled in the uploads folder
+- Full audit log of every admin action
+- HTTPS forced, HSTS, and a full set of security headers in `.htaccess`

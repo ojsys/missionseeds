@@ -5,17 +5,8 @@ function e(?string $s): string {
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-/** Settings that may be edited inline (contenteditable) directly on the public page. */
-const INLINE_EDITABLE_KEYS = [
-    'hero_eyebrow', 'hero_heading', 'hero_subheading',
-    'seed_eyebrow', 'seed_heading', 'seed_body',
-    'who_eyebrow', 'who_heading', 'who_intro',
-    'pilot_eyebrow', 'pilot_heading', 'pilot_body',
-    'receive_eyebrow', 'receive_heading',
-    'partners_eyebrow', 'partners_heading', 'partners_intro',
-    'harvest_eyebrow', 'harvest_heading', 'harvest_subheading',
-    'deadline_note', 'eoi_button_label', 'footer_tagline',
-];
+// The list of inline-editable settings keys now lives in includes/content_keys.php,
+// grouped by page. Use is_inline_editable($key) to test one.
 
 /**
  * Renders a piece of settings text. When an admin is logged in, wraps it in
@@ -290,6 +281,84 @@ function save_uploaded_image(array $file, string $prefix, int $maxBytes = 419430
     return 'assets/uploads/' . $filename;
 }
 
+/**
+ * Validates and stores an uploaded document for the Resource Hub.
+ *
+ * Like save_uploaded_image() this sniffs the real MIME type rather than
+ * trusting the filename. The allow-list is deliberately short — anything that
+ * a browser might execute, or that Apache might hand to the PHP handler, is
+ * absent. Uploads also land in assets/uploads, where the folder's own
+ * .htaccess disables script execution.
+ */
+function save_uploaded_document(array $file, string $prefix = 'resource', int $maxBytes = 20971520): array {
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException(
+            ($file['error'] ?? null) === UPLOAD_ERR_INI_SIZE
+                ? 'That file is larger than the server allows.'
+                : 'No file was received.'
+        );
+    }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        throw new RuntimeException('Invalid upload.');
+    }
+    if ($file['size'] > $maxBytes) {
+        throw new RuntimeException('File must be under ' . round($maxBytes / 1048576) . 'MB.');
+    }
+
+    $allowed = [
+        'application/pdf'  => 'pdf',
+        'image/jpeg'       => 'jpg',
+        'image/png'        => 'png',
+        'image/webp'       => 'webp',
+        'text/plain'       => 'txt',
+        'text/csv'         => 'csv',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'   => 'docx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'         => 'xlsx',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+        // Office files are ZIP containers, so finfo often reports them as such.
+        'application/zip'  => null,
+    ];
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime  = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!array_key_exists($mime, $allowed)) {
+        throw new RuntimeException('Please upload a PDF, Word, Excel, PowerPoint, CSV, or image file.');
+    }
+
+    $ext = $allowed[$mime];
+    if ($ext === null) {
+        // A ZIP-detected file is only accepted if its name claims an Office type.
+        $claimed = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+        if (!in_array($claimed, ['docx', 'xlsx', 'pptx'], true)) {
+            throw new RuntimeException('Please upload a PDF, Word, Excel, PowerPoint, CSV, or image file.');
+        }
+        $ext = $claimed;
+    }
+
+    if (!is_dir(UPLOAD_DIR) && !mkdir(UPLOAD_DIR, 0755, true) && !is_dir(UPLOAD_DIR)) {
+        throw new RuntimeException('Could not create the uploads folder.');
+    }
+
+    $safePrefix = preg_replace('/[^a-z0-9_-]/i', '', $prefix) ?: 'file';
+    $filename   = $safePrefix . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+    if (!move_uploaded_file($file['tmp_name'], UPLOAD_DIR . '/' . $filename)) {
+        throw new RuntimeException('Could not save the uploaded file.');
+    }
+    return ['path' => 'assets/uploads/' . $filename, 'bytes' => (int) $file['size']];
+}
+
+/** "2.4 MB" — for resource download links. */
+function human_bytes(?int $bytes): string {
+    if (!$bytes) return '';
+    $units = ['B', 'KB', 'MB', 'GB'];
+    $i = 0;
+    $n = (float) $bytes;
+    while ($n >= 1024 && $i < count($units) - 1) { $n /= 1024; $i++; }
+    return ($n < 10 && $i > 0 ? round($n, 1) : round($n)) . ' ' . $units[$i];
+}
+
 /** Deletes an uploaded file, refusing to touch anything outside assets/uploads. */
 function delete_upload(?string $relativePath): void {
     if (!$relativePath) return;
@@ -326,4 +395,106 @@ function days_until(string $ymd): ?int {
     if (!$ts) return null;
     $diff = $ts - time();
     return (int) ceil($diff / 86400);
+}
+
+/** "12 March 2026", or '' when the date is empty/unparseable. */
+function format_date(?string $ymd, string $format = 'j F Y'): string {
+    if (!$ymd) return '';
+    $ts = strtotime($ymd);
+    return $ts ? date($format, $ts) : '';
+}
+
+/** Human-friendly age for feeds: "3 days ago", "2 months ago". */
+function time_ago(?string $datetime): string {
+    if (!$datetime) return '';
+    $ts = strtotime($datetime);
+    if (!$ts) return '';
+    $diff = time() - $ts;
+    if ($diff < 60)      return 'just now';
+    if ($diff < 3600)    return floor($diff / 60) . ' minutes ago';
+    if ($diff < 86400)   return floor($diff / 3600) . ' hours ago';
+    if ($diff < 604800)  return floor($diff / 86400) . ' days ago';
+    if ($diff < 2592000) return floor($diff / 604800) . ' weeks ago';
+    if ($diff < 31536000) return floor($diff / 2592000) . ' months ago';
+    return floor($diff / 31536000) . ' years ago';
+}
+
+/**
+ * URL-safe slug. Always returns something — falls back to a short random
+ * token so a title of only punctuation cannot produce an empty slug.
+ */
+function slugify(string $text, int $maxLength = 120): string {
+    $slug = strtolower(trim($text));
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
+    $slug = trim($slug, '-');
+    $slug = mb_substr($slug, 0, $maxLength);
+    return $slug !== '' ? $slug : 'item-' . bin2hex(random_bytes(3));
+}
+
+/**
+ * Makes a slug unique within a table by appending -2, -3, … when needed.
+ * $table and $column are developer-supplied identifiers, never user input.
+ */
+function unique_slug(string $base, string $table, ?int $ignoreId = null, string $column = 'slug'): string {
+    $slug = $base;
+    $n    = 1;
+    $sql  = "SELECT COUNT(*) FROM `$table` WHERE `$column` = ?" . ($ignoreId ? ' AND id <> ?' : '');
+    $stmt = db()->prepare($sql);
+
+    while (true) {
+        $params = $ignoreId ? [$slug, $ignoreId] : [$slug];
+        $stmt->execute($params);
+        if ((int) $stmt->fetchColumn() === 0) {
+            return $slug;
+        }
+        $n++;
+        $slug = mb_substr($base, 0, 115) . '-' . $n;
+    }
+}
+
+/** Formats an indicator for display according to its display_format. */
+function format_indicator(array $indicator): string {
+    switch ($indicator['display_format']) {
+        case 'text':
+            return $indicator['value_text'] ?? '—';
+        case 'percent':
+            return rtrim(rtrim(number_format((float) $indicator['value_num'], 1), '0'), '.') . '%';
+        case 'decimal':
+            return number_format((float) $indicator['value_num'], 1);
+        case 'integer':
+        default:
+            return number_format((float) $indicator['value_num']);
+    }
+}
+
+/**
+ * Renders admin-authored body text as safe HTML.
+ *
+ * Story bodies are written by trusted-but-not-infallible staff and church
+ * coordinators, so rather than allowing raw HTML we accept plain paragraphs
+ * plus a tiny markdown subset (**bold**, *italic*, [text](url)) and escape
+ * everything else. Nothing an author types can introduce script.
+ */
+function rich_text(?string $text): string {
+    if (!$text) return '';
+    $out = '';
+    foreach (preg_split('/\n\s*\n/', str_replace("\r\n", "\n", trim($text))) as $para) {
+        $safe = e($para);
+        $safe = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $safe);
+        $safe = preg_replace('/(?<!\*)\*([^*\n]+)\*(?!\*)/', '<em>$1</em>', $safe);
+        $safe = preg_replace_callback(
+            '/\[([^\]]{1,120})\]\((https?:\/\/[^\s)]{1,400})\)/',
+            fn($m) => '<a href="' . e($m[2]) . '" target="_blank" rel="noopener nofollow">' . $m[1] . '</a>',
+            $safe
+        );
+        $out .= '<p>' . nl2br($safe) . '</p>';
+    }
+    return $out;
+}
+
+/** First N characters of body text, for cards and meta descriptions. */
+function excerpt_from(?string $text, int $length = 180): string {
+    $plain = trim(preg_replace('/\s+/', ' ', strip_tags((string) $text)) ?? '');
+    if (mb_strlen($plain) <= $length) return $plain;
+    return mb_substr($plain, 0, $length - 1) . '…';
 }

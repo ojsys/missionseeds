@@ -1,0 +1,13 @@
+# Local developer overrides — never committed, never uploaded
+config.local.php
+
+# Uploaded media (regenerated per environment; keep the folder + its .htaccess)
+assets/uploads/*
+!assets/uploads/.htaccess
+!assets/uploads/hero.jpg
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~

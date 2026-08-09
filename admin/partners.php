@@ -1,7 +1,6 @@
 <?php
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/helpers.php';
-require_admin();
+require_once __DIR__ . '/../includes/bootstrap.php';
+require_capability('manage_content');
 
 $flash = '';
 $flashType = '';

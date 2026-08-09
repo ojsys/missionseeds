@@ -1,7 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/helpers.php';
-require_once __DIR__ . '/../includes/icons.php';
+require_once __DIR__ . '/../includes/bootstrap.php';
 
 start_session_safe();
 header('Content-Type: application/json');
@@ -9,6 +7,13 @@ header('Content-Type: application/json');
 if (!admin_logged_in()) {
     http_response_code(401);
     echo json_encode(['ok' => false, 'error' => 'Not logged in.']);
+    exit;
+}
+
+// Every action here edits public site content.
+if (!user_can('manage_content')) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'Your role cannot edit site content.']);
     exit;
 }
 
@@ -25,11 +30,12 @@ try {
 
         case 'save_setting': {
             $key = $_POST['key'] ?? '';
-            if (!in_array($key, INLINE_EDITABLE_KEYS, true)) {
+            if (!is_inline_editable($key)) {
                 throw new RuntimeException('That field cannot be edited inline.');
             }
             $value = trim((string) ($_POST['value'] ?? ''));
             set_setting($key, $value);
+            audit('edit_copy', 'setting', null, $key);
             echo json_encode(['ok' => true]);
             break;
         }

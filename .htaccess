@@ -17,6 +17,31 @@
   # www.missionseedlings.com -> missionseedlings.com
   RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
   RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+  # ---------------------------------------------------------------
+  # BLOCK APPLICATION DIRECTORIES
+  # ---------------------------------------------------------------
+  # includes/, pages/, migrations/, and DOCS/ are only ever reached through
+  # index.php. A direct request must never execute or list anything.
+  RewriteRule ^(includes|pages|migrations|DOCS|bin)(/|$) - [F,L]
+
+  # ---------------------------------------------------------------
+  # FRONT CONTROLLER — clean URLs
+  # ---------------------------------------------------------------
+  # Never route the application directories through the router; they are
+  # real PHP files that handle their own authentication.
+  RewriteRule ^(admin|portal|assets)/ - [L]
+
+  # Strip a trailing slash so /about/ and /about are one canonical URL.
+  # Relative substitution (no leading slash) so this stays correct if the site
+  # is ever installed in a subfolder rather than at the domain root.
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.+)/$ $1 [R=301,L]
+
+  # Anything that is not an existing file or directory is a page route.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.php [L]
 </IfModule>
 
 # -----------------------------
@@ -64,6 +89,7 @@ Options -Indexes -MultiViews
 <Files "README.md">
   Require all denied
 </Files>
+
 
 # -----------------------------
 # 4. DEFLATE / BROTLI COMPRESSION

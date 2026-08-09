@@ -50,6 +50,23 @@ hPanel → **Databases** → **MySQL Databases**
 4. Choose file → select `install.sql` from this project folder → **Import**
 5. You should see "Import has been successfully finished, X queries executed" — and on the left 3 tables: `admin_users`, `list_items`, `settings`.
 
+### 3b. Import `migrations/002_platform.sql` — REQUIRED
+
+`install.sql` alone gives you the original single-page site. The full platform (roles, churches,
+pathway, indicators, stories, resources, enquiries) comes from the migration.
+
+1. Same phpMyAdmin tab, same database selected
+2. **Import** → choose file → `migrations/002_platform.sql` → **Import**
+3. The left column should now list ~19 tables, including `users` (renamed from `admin_users`),
+   `churches`, `pathway_stages`, `milestones`, `indicators`, `stories`, `media`, `resources`,
+   `kobo_forms`, `submissions`, and `audit_log`.
+
+> Run these **in order and once each**. `002_platform.sql` renames `admin_users` to `users`, so
+> re-running it will error. That is expected and harmless — it means it already ran.
+
+Any future `migrations/003_*.sql` files are imported the same way, in number order, before you
+upload code that depends on them.
+
 ### 4. Upload files via File Manager (or FTP / Hostinger Backup Upload)
 Upload **everything inside the seedlings-cms folder** into the **web root** of missionseedlings.com.
 
@@ -66,30 +83,27 @@ public_html/
 **Folders structure after upload:**
 ```
 public_html/
-├── .htaccess              ← HTTPS + security rules
+├── .htaccess              ← HTTPS, security headers, clean-URL rewrite
 ├── config.php             ← WITH your DB credentials filled in
-├── index.php              ← the public landing page
+├── index.php              ← front controller (routes every public page)
+├── robots.txt
 ├── install.sql            ← (blocked from browsers by .htaccess)
-├── DEPLOY-HOSTINGER.md    ← (blocked from browsers by .htaccess)
 ├── README.md              ← (blocked from browsers by .htaccess)
-├── admin/
-│   ├── login.php
-│   ├── index.php
-│   ├── lists.php
-│   ├── settings.php
-│   ├── change-password.php
-│   ├── api.php
-│   └── partials/
-├── assets/
-│   ├── css/
-│   ├── js/
-│   └── uploads/           ← ⚠️  SET PERMISSIONS (step 5)
-└── includes/
-    ├── db.php
-    ├── auth.php
-    ├── helpers.php
-    └── icons.php
+├── DEPLOY-HOSTINGER.md    ← (blocked from browsers by .htaccess)
+├── admin/                 ← staff area
+├── portal/                ← church coordinator area
+├── pages/                 ← public templates (403 to browsers)
+├── includes/              ← app code + models (403 to browsers)
+├── migrations/            ← SQL (403 to browsers)
+├── bin/                   ← cron scripts (403 to browsers)
+├── DOCS/                  ← staff guide + developer notes (403 to browsers)
+└── assets/
+    ├── css/  js/  img/
+    └── uploads/           ← ⚠️  SET PERMISSIONS (step 5)
 ```
+
+> **Do not skip `pages/`, `includes/`, `bin/`, or `migrations/`.** They are blocked from browsers
+> but the application requires them. `.htaccess` returns 403 for any direct request to those paths.
 
 ### 5. Critical: set `assets/uploads/` permissions
 The hero image save/change feature needs write access here.
@@ -107,8 +121,20 @@ The hero image save/change feature needs write access here.
 
 > ⚠️  Note: SSL installation can take 2-5 minutes. If you get privacy error, wait and refresh.
 
+### 6b. Verify clean URLs work
+
+The site uses clean URLs (`/about`, not `/about.php`), produced by the rewrite rule in `.htaccess`.
+LiteSpeed honours it, but check before going further:
+
+1. Visit `https://missionseedlings.com/about` — the About page should load.
+2. Visit `https://missionseedlings.com/includes/db.php` — must return **403 Forbidden**.
+
+If `/about` 404s, `mod_rewrite` is not active. In hPanel → Advanced → **PHP Configuration**, confirm
+the site is served by LiteSpeed/Apache (not Nginx-only), and that `.htaccess` uploaded intact —
+File Manager hides dotfiles until you enable *Show hidden files*.
+
 ### 7. Verify site + login + change admin password (URGENT!)
-1. Visit `https://missionseedlings.com` — landing page loads (no DB errors, content visible)
+1. Visit `https://missionseedlings.com` — homepage loads (no DB errors, content visible)
 2. Visit `https://missionseedlings.com/admin/login.php`
 3. **Default credentials** (from install.sql — they are PUBLIC, CHANGE NOW):
    ```
@@ -189,3 +215,54 @@ What we already locked in for Hostinger:
 ---
 
 After changing admin password + filling Settings, share the site 🎉  — `https://missionseedlings.com`
+
+
+---
+
+## 🔁 Optional: KoboToolbox sync cron
+
+Not needed for launch — the site links to Kobo forms and project managers type the tracker figures
+in. Set this up only when you want indicators to update themselves.
+
+1. Put your Kobo API token in `config.php`:
+   ```php
+   defined('KOBO_API_TOKEN') || define('KOBO_API_TOKEN', 'your-token-here');
+   ```
+2. In Admin → Indicators, edit an indicator, set **Source** to *KoboToolbox*, and paste the form UID.
+3. hPanel → **Advanced** → **Cron Jobs** → Create, once a day:
+   ```
+   /usr/bin/php /home/uXXXXXXXX/public_html/bin/kobo-sync.php
+   ```
+   (Replace `uXXXXXXXX` with your account prefix — the path is shown in File Manager.)
+
+The script refuses to run from a browser, and does nothing at all while the token is empty, so it
+is safe to schedule early.
+
+---
+
+## 💾 Backups
+
+Hostinger takes automatic backups on most plans, but confirm rather than assume — and take your own
+before any change you would not want to undo.
+
+1. hPanel → **Files** → **Backups** → check that automatic backups are on and note the frequency.
+2. Before running a migration or a bulk edit, use **Create new backup** for an on-demand snapshot.
+3. For an off-site copy of the content: phpMyAdmin → your database → **Export** → *Quick*, SQL.
+   Keep that file somewhere outside Hostinger. The database holds all the site's content — the
+   uploaded photos in `assets/uploads/` are the other half, so download those too.
+
+A restore is: import the `.sql` export into the database, then re-upload `assets/uploads/`.
+
+---
+
+## 🚑 If something breaks after deploying
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| "Site is temporarily unavailable" | Wrong DB credentials in `config.php` | Re-check `DB_NAME` / `DB_USER` / `DB_PASS` against hPanel, including the account prefix |
+| Homepage works, `/about` 404s | Rewrite rule not active | See step 6b |
+| Every page unstyled | `assets/` did not upload, or `SITE_URL` has a trailing slash | Re-upload `assets/`; remove the trailing slash |
+| "Table 'users' doesn't exist" | `migrations/002_platform.sql` was not imported | Import it (step 3b) |
+| Photo uploads fail | `assets/uploads/` not writable | CHMOD 775 (step 5) |
+| Locked out of admin | 5 failed logins | Wait 15 minutes, or in phpMyAdmin run `DELETE FROM login_attempts;` |
+| Lost the only admin password | — | In phpMyAdmin, run `UPDATE users SET password_hash = '<hash>', must_change_password = 1 WHERE username = 'admin';` using a hash from a bcrypt generator |

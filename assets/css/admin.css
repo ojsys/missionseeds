@@ -211,3 +211,142 @@ body.admin{
   border:1px solid var(--cream-line); border-radius:var(--radius-sm);
   background:#fff;
 }
+
+/* ==========================================================================
+   Role chip + signed-in strip (added with the multi-role account system)
+   ========================================================================== */
+.admin-whoami{
+  background:#fff; border-bottom:1px solid var(--cream-line);
+  padding:10px 32px; font-size:13.5px; color:var(--ink-muted);
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.admin-whoami strong{ color:var(--forest-deep); font-weight:600; }
+.role-chip{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em;
+  text-transform:uppercase; padding:4px 10px; border-radius:100px;
+  background:var(--cream-soft); color:var(--forest-deep);
+}
+.role-chip.role-super_admin{ background:var(--cherry); color:#fff; }
+.role-chip.role-project_manager{ background:var(--forest); color:var(--cream); }
+.role-chip.role-editor{ background:var(--sprout-soft); color:var(--forest-deep); }
+.role-chip.role-church_coordinator{ background:#f4e3c4; color:var(--soil); }
+
+@media (max-width:640px){
+  .admin-whoami{ padding:10px 20px; }
+}
+
+/* ==========================================================================
+   Form + table additions for the CMS admin screens
+   ========================================================================== */
+.form-row input[type=number], .form-row input[type=email], .form-row select{
+  width:100%; font-family:var(--body); font-size:15px; padding:11px 13px;
+  border:1px solid var(--cream-line); border-radius:6px; background:var(--cream); color:var(--ink);
+}
+.three-col{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+@media (max-width:760px){ .three-col{ grid-template-columns:1fr; } }
+
+.checkbox-row{ display:flex; align-items:flex-start; gap:10px; }
+.checkbox-row input[type=checkbox]{ width:18px; height:18px; margin-top:2px; flex:none; accent-color:var(--forest); }
+.checkbox-row label{
+  font-family:var(--body); font-size:14.5px; text-transform:none; letter-spacing:0;
+  color:var(--ink); margin:0; font-weight:500;
+}
+.checkbox-row .help{ margin-top:3px; }
+
+.panel-head{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap; margin-bottom:18px;
+}
+.panel-head h2{ margin:0; }
+.btn.small{ padding:9px 16px; font-size:13.5px; }
+
+.pill{
+  display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:0.07em;
+  text-transform:uppercase; padding:4px 10px; border-radius:100px;
+  background:var(--cream-soft); color:var(--ink-muted); white-space:nowrap;
+}
+.pill.ok{ background:var(--sprout); color:#fff; }
+.pill.warn{ background:var(--gold); color:var(--forest-deep); }
+.pill.alert{ background:var(--cherry); color:#fff; }
+.pill.muted{ background:var(--cream-soft); color:var(--ink-muted); }
+
+.stat-strip{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:30px; }
+.stat-strip .panel{ margin:0; padding:20px 22px; }
+.stat-strip .eyebrow{ color:var(--ink-muted); }
+.stat-strip h2{ font-family:var(--display); font-size:26px; margin:6px 0 0; color:var(--forest-deep); }
+
+.temp-password{
+  font-family:var(--mono); font-size:17px; letter-spacing:0.04em;
+  background:var(--forest-deep); color:var(--gold-soft);
+  padding:14px 20px; border-radius:8px; display:inline-block; margin:10px 0; user-select:all;
+}
+
+.media-picker{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px; }
+.media-tile{
+  position:relative; border:2px solid var(--cream-line); border-radius:8px;
+  overflow:hidden; cursor:pointer; aspect-ratio:4/3; background:var(--cream-soft);
+}
+.media-tile img{ width:100%; height:100%; object-fit:cover; }
+.media-tile input{ position:absolute; top:6px; left:6px; width:18px; height:18px; accent-color:var(--forest); }
+.media-tile.no-consent::after{
+  content:'No consent'; position:absolute; bottom:0; left:0; right:0;
+  background:var(--cherry); color:#fff; font-family:var(--mono); font-size:9px;
+  letter-spacing:0.06em; text-transform:uppercase; text-align:center; padding:3px;
+}
+
+.admin-note{
+  background:rgba(31,59,44,0.05); border-left:3px solid var(--sprout);
+  border-radius:0 6px 6px 0; padding:14px 18px; font-size:13.5px;
+  color:var(--ink-muted); margin-bottom:22px;
+}
+.admin-note strong{ color:var(--forest-deep); }
+
+.filter-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+.filter-row a{
+  font-size:13.5px; text-decoration:none; padding:7px 14px; border-radius:100px;
+  border:1px solid var(--cream-line); background:#fff; color:var(--ink-muted);
+}
+.filter-row a.active{ background:var(--forest); color:var(--cream); border-color:var(--forest); }
+
+.table-scroll{ overflow-x:auto; }
+
+/* ==========================================================================
+   Mobile — church coordinators submit updates from a phone in the field, so
+   the portal and admin have to be genuinely usable with a thumb.
+   ========================================================================== */
+@media (max-width:880px){
+  .admin-topbar{ flex-wrap:wrap; gap:8px; padding:12px 18px; }
+  .admin-topbar .brand{ min-height:44px; }
+  .admin-nav{ flex-wrap:wrap; gap:2px; width:100%; }
+  .admin-nav a{
+    display:inline-flex; align-items:center; min-height:44px;
+    padding:0 14px; font-size:14.5px;
+  }
+
+  .admin-main{ padding:28px 18px 64px; }
+  .admin-header h1{ font-size:24px; }
+  .panel{ padding:22px 20px; }
+  .panel-head{ gap:10px; }
+
+  /* A bare 18px checkbox is a hard target. The label is clickable too, but the
+     box itself should not be the fiddly option. */
+  .checkbox-row input[type=checkbox]{ width:24px; height:24px; margin-top:0; }
+  .checkbox-row{ align-items:center; }
+
+  /* Form controls at thumb size, and 16px text so iOS does not zoom on focus. */
+  .form-row input[type=text], .form-row input[type=password], .form-row input[type=date],
+  .form-row input[type=tel], .form-row input[type=url], .form-row input[type=number],
+  .form-row input[type=email], .form-row select, .form-row textarea{
+    font-size:16px; min-height:44px;
+  }
+  .form-row textarea{ min-height:120px; }
+  .btn{ min-height:44px; width:100%; }
+  .btn.small{ width:auto; }
+
+  .three-col{ grid-template-columns:1fr; }
+  .stat-strip{ grid-template-columns:repeat(2,1fr); }
+
+  /* Round icon buttons in table rows. */
+  .data-table .actions a, .data-table .actions button{ width:40px; height:40px; }
+  .data-table td, .data-table th{ padding:10px 8px; }
+}

@@ -5,6 +5,27 @@
   var CSRF    = window.SEEDLINGS_CSRF || '';
   var API     = window.SEEDLINGS_API || 'admin/api.php';
 
+
+  /* ---------------------------------------------------------------------
+     Mobile navigation drawer
+     --------------------------------------------------------------------- */
+  var navToggle = document.getElementById('nav-toggle');
+  var navLinks  = document.getElementById('site-nav');
+  if(navToggle && navLinks){
+    navToggle.addEventListener('click', function(){
+      var open = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Close on Escape so keyboard users are never trapped in the drawer.
+    document.addEventListener('keydown', function(ev){
+      if(ev.key === 'Escape' && navLinks.classList.contains('open')){
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.focus();
+      }
+    });
+  }
+
   /* ---------------------------------------------------------------------
      Growth vine: draws down the page, fills in as the visitor scrolls
      --------------------------------------------------------------------- */
@@ -70,6 +91,9 @@
      Leaf markers + section reveal
      --------------------------------------------------------------------- */
   function placeLeafNodes(){
+    // Only the call page carries the vine spine; every other page has no #top
+    // wrapper and nothing to place.
+    if(!trackWrap) return;
     // viewport-space bottom of the last section; converted per-node below
     var lastSecBottom = null;
     var lastSec = trackWrap.querySelector('section:last-of-type, .harvest:last-of-type');
