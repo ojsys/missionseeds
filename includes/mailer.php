@@ -89,8 +89,52 @@ function mail_config(): array {
 
 /** True when the site can actually send mail through SMTP. */
 function mail_is_configured(): bool {
+    return mail_config_problems() === [];
+}
+
+/**
+ * Precisely why mail is not going out, in the order worth fixing.
+ *
+ * A bare "Not configured" is useless — the whole point of this list is that the
+ * status panel can say which switch or field is the problem.
+ *
+ * @return array<int, array{title:string, fix:string}>
+ */
+function mail_config_problems(): array {
     $c = mail_config();
-    return $c['enabled'] && $c['host'] !== '' && $c['from_email'] !== '';
+    $problems = [];
+
+    if ($c['host'] === '') {
+        $problems[] = [
+            'title' => 'No outgoing mail server',
+            'fix'   => 'Fill in the SMTP host below — on Hostinger it is usually smtp.hostinger.com.',
+        ];
+    }
+    if (!$c['enabled'] && $c['host'] !== '') {
+        $problems[] = [
+            'title' => 'SMTP is switched off',
+            'fix'   => 'The details are saved but not in use. Tick "Use SMTP to send email" below and save.',
+        ];
+    }
+    if ($c['from_email'] === '') {
+        $problems[] = [
+            'title' => 'No From address',
+            'fix'   => 'Every mail server needs one. Use a mailbox on your own domain, such as noreply@'
+                     . (parse_url(SITE_URL, PHP_URL_HOST) ?: 'yourdomain.com') . '.',
+        ];
+    } elseif (!filter_var($c['from_email'], FILTER_VALIDATE_EMAIL)) {
+        $problems[] = [
+            'title' => 'The From address is not a valid email address',
+            'fix'   => 'Check it for typos — it must look like noreply@yourdomain.com.',
+        ];
+    }
+    if ($c['enabled'] && $c['host'] !== '' && $c['username'] !== '' && $c['password'] === '') {
+        $problems[] = [
+            'title' => 'No password saved for the SMTP username',
+            'fix'   => 'Enter the mailbox password below. Almost every provider requires one.',
+        ];
+    }
+    return $problems;
 }
 
 /* ===========================================================================
@@ -272,7 +316,8 @@ function php_mail_send(array $cfg, string $to, string $subject, string $html, st
     );
     if (!$ok) {
         throw new RuntimeException(
-            "PHP's mail() was rejected by the server. Configure SMTP under Settings → Email."
+            "The server's basic mail function was rejected, and SMTP is not switched on. "
+            . "Set it up under System → Email."
         );
     }
 }

@@ -73,7 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (!empty($_GET['saved'])) {
-    $flash = 'Email settings saved.';
+    if (mail_is_configured()) {
+        $flash = 'Email settings saved. Send a test below to confirm they work.';
+    } else {
+        // "Saved" on its own reads like success when nothing will actually send.
+        $problems  = mail_config_problems();
+        $flash     = 'Settings saved — but email still will not send: ' . $problems[0]['title'] . '. '
+                   . $problems[0]['fix'];
+        $flashType = 'error';
+    }
 }
 
 $emailReady   = migration_applied('migrations/003_email.sql');
@@ -126,11 +134,18 @@ include __DIR__ . '/partials/header.php';
       Send a test below to confirm it really works.
     </p>
   <?php else: ?>
-    <div class="admin-note" style="margin-bottom:0;">
-      <strong>Email is not set up yet.</strong> Accounts can still be created — the invitation link is
-      shown on screen for you to pass on by WhatsApp — but nothing is emailed automatically.
-      Fill in the SMTP details below to switch email on.
-    </div>
+    <p class="hint">
+      Nothing is being emailed yet. Accounts can still be created — the invitation link is shown on
+      screen to pass on by WhatsApp — but here is what still needs doing:
+    </p>
+    <ul class="fix-list">
+      <?php foreach (mail_config_problems() as $problem): ?>
+        <li>
+          <strong><?= e($problem['title']) ?></strong>
+          <span><?= e($problem['fix']) ?></span>
+        </li>
+      <?php endforeach; ?>
+    </ul>
   <?php endif; ?>
 </div>
 
@@ -154,9 +169,11 @@ include __DIR__ . '/partials/header.php';
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save">
 
-    <?php field_checkbox('smtp_enabled', 'Send email through SMTP',
+    <?php field_checkbox('smtp_enabled', 'Use SMTP to send email',
         get_setting('smtp_enabled', '0') === '1',
-        "Leave this off until the details below are filled in. When it is off, the site falls back to the server's basic mail function, which many shared hosts silently drop."); ?>
+        'This is the master switch — fill in the details below, tick this, and save. Leaving it '
+        . "unticked means the details are stored but ignored, and the site falls back to the server's "
+        . 'basic mail function, which most shared hosts silently drop.'); ?>
 
     <div class="two-col">
       <?php

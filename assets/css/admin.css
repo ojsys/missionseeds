@@ -648,3 +648,13 @@ body.denied{ background:var(--cream-soft); min-height:100vh; }
 .denied-shell .panel h2{ margin-bottom:10px; }
 .denied-shell .panel p{ margin-bottom:18px; }
 .denied-shell .btn{ display:inline-block; text-decoration:none; }
+
+/* Actionable problem list on the Email status panel. */
+.fix-list{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.fix-list li{
+  display:grid; gap:3px;
+  background:rgba(198,148,71,0.1); border-left:3px solid var(--gold);
+  border-radius:0 8px 8px 0; padding:12px 16px;
+}
+.fix-list strong{ font-size:14.5px; color:var(--forest-deep); }
+.fix-list span{ font-size:13.5px; color:var(--ink-muted); }

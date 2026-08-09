@@ -255,8 +255,11 @@ Sign in, then **System → Email**:
 1. Fill in host, port, security, username, and password
 2. **From address:** the mailbox you just created. It must be on your own domain — a Gmail or Yahoo
    From address will be rejected or spam-filed by the receiving server.
-3. Tick **Send email through SMTP** and save
-4. Press **Send a test email** to yourself and confirm it arrives
+3. **Tick "Use SMTP to send email"** — the master switch. Leaving it unticked saves the details
+   but keeps the site on the server's basic mail function, which Hostinger usually drops.
+4. Save. The **Status** box turns green and names the server; if it stays amber it lists exactly
+   what is still missing.
+5. Press **Send a test email** to yourself and confirm it arrives
 
 > The password is stored encrypted using `APP_KEY` from `config.php`. If you ever change `APP_KEY`,
 > the saved SMTP password can no longer be decrypted and must be entered again.

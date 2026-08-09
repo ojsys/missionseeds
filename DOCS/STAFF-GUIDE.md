@@ -279,8 +279,11 @@ Get them from your mailbox provider. On Hostinger: hPanel → Emails → Email A
 
 1. Fill in the host, port, security, username, and password
 2. Set the **From address** to a mailbox on your own domain — anything else gets treated as spam
-3. Tick **Send email through SMTP** and save
-4. Use **Send a test email** to prove it works before relying on it
+3. **Tick "Use SMTP to send email"** — this is the master switch. Without it the details are saved
+   but ignored, and the Status box will keep saying *Not configured*.
+4. Save, then use **Send a test email** to prove it works before relying on it
+
+If Status is not green, it lists exactly what is still missing — work down that list.
 
 The password is stored encrypted and never shown again. Leave the field blank when saving to keep
 the one already there.
