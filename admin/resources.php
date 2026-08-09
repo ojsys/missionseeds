@@ -58,16 +58,13 @@ $isNewForm = empty($editingForm['id']);
 $resources = get_hub_resources(true);
 $koboForms = get_kobo_forms(true);
 
-$pageTitle = 'Resources';
+$pageEyebrow = 'Content';
+$pageTitle   = 'Resource hub';
+$pageIntro   = 'Public documents, restricted field materials, and the KoboToolbox form links.';
 $active = 'resources';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Content</div>
-  <h1>Resource hub</h1>
-  <p>Public documents, restricted field materials, and the KoboToolbox form links.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

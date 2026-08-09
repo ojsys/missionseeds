@@ -53,16 +53,13 @@ $users    = get_users();
 $churches = get_churches(true);
 $me       = current_user();
 
-$pageTitle = 'Users';
+$pageEyebrow = 'Accounts';
+$pageTitle   = 'Users and roles';
+$pageIntro   = 'Accounts are created here — there is no public sign-up. New users receive a temporary password and must choose their own on first sign-in.';
 $active = 'users';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Accounts</div>
-  <h1>Users and roles</h1>
-  <p>Accounts are created here — there is no public sign-up. New users receive a temporary password and must choose their own on first sign-in.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

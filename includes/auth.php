@@ -203,18 +203,26 @@ function require_staff(): array {
     return require_role(STAFF_ROLES);
 }
 
+/**
+ * The 403 page. Rendered standalone rather than through the admin shell — the
+ * shell's sidebar is built from capabilities the visitor has just been refused,
+ * so drawing it here would be both pointless and confusing.
+ */
 function deny_access(): void {
     http_response_code(403);
     $user = current_user();
     $back = $user ? home_for_role($user['role']) : rtrim(SITE_URL, '/') . '/';
+    $css  = htmlspecialchars(rtrim(SITE_URL, '/'), ENT_QUOTES);
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
        . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+       . '<meta name="robots" content="noindex, nofollow">'
        . '<title>Not permitted</title>'
-       . '<link rel="stylesheet" href="' . htmlspecialchars(rtrim(SITE_URL, '/') . '/assets/css/style.css', ENT_QUOTES) . '">'
-       . '<link rel="stylesheet" href="' . htmlspecialchars(rtrim(SITE_URL, '/') . '/assets/css/admin.css', ENT_QUOTES) . '">'
-       . '</head><body class="admin"><div class="admin-main"><div class="panel">'
+       . '<link rel="stylesheet" href="' . $css . '/assets/css/style.css">'
+       . '<link rel="stylesheet" href="' . $css . '/assets/css/admin.css">'
+       . '</head><body class="denied"><div class="denied-shell"><div class="panel">'
        . '<h2>You do not have access to that page</h2>'
-       . '<p class="hint">Your account role does not include this area. If you think it should, ask a Super Admin to update your role.</p>'
+       . '<p class="hint">Your account role does not include this area. If you think it should, '
+       . 'ask a Super Admin to update your role.</p>'
        . '<p><a class="btn" href="' . htmlspecialchars($back, ENT_QUOTES) . '">Back to your dashboard</a></p>'
        . '</div></div></body></html>';
     exit;

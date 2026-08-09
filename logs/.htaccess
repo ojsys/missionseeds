@@ -1,21 +1,6 @@
-# Do NOT remove this file.
-#
-# The logs/ folder holds the application error log (app.log) which may contain
-# database error messages, file paths, and stack traces. It MUST NOT be
-# reachable from the web. On Hostinger / LiteSpeed / Apache the rules below
-# block every request. If you migrate to nginx, replicate this denial in your
-# server block.
-
+# The application error log lives here. It must never be readable over HTTP.
 Require all denied
-
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteRule ^ - [F,L]
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
 </IfModule>
-
-Options -Indexes -ExecCGI
-RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .phar
-RemoveType .php .phtml .php3 .php4 .php5 .php7 .phar
-<FilesMatch ".+">
-  Require all denied
-</FilesMatch>

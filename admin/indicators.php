@@ -66,16 +66,13 @@ $isNew = empty($editing['id']);
 $indicators = get_indicators(true);
 $rollup     = church_rollup();
 
-$pageTitle = 'Indicators';
+$pageEyebrow = 'Project';
+$pageTitle   = 'Impact indicators';
+$pageIntro   = 'These are the numbers on the public Growth Tracker. Every change is dated, so the tracker can show movement over time.';
 $active = 'indicators';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Project</div>
-  <h1>Impact indicators</h1>
-  <p>These are the numbers on the public Growth Tracker. Every change is dated, so the tracker can show movement over time.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

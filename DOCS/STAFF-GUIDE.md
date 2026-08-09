@@ -45,6 +45,28 @@ and when they ask for a fuller update, a Project Manager sends one (see section 
 
 ---
 
+## 2b. Finding your way around
+
+Everything lives in the **dark green sidebar on the left**, grouped by what it is for:
+
+- **Overview** — the dashboard
+- **Project** — churches, the pathway, the tracker figures
+- **Content** — stories, photos, resources, and the call page lists
+- **People** — enquiries and user accounts
+- **System** — settings, the activity log, and your own password
+
+A red number next to an item means something is waiting for you — stories to review, or unread
+enquiries. Your name and role sit at the bottom of the sidebar, with the log-out button beside it.
+
+**On a phone or tablet** the sidebar is hidden. Tap the ☰ button at the top left to slide it out,
+and tap anywhere outside it (or press Escape) to close it again. A red dot on that button means
+something needs attention.
+
+The **dashboard** is a work queue rather than a menu: it shows what is waiting, lets you publish a
+pending story without opening it, and summarises where the project stands.
+
+---
+
 ## 3. Editing words on the website
 
 The quickest way to change text is to **edit it where you see it**.
@@ -107,8 +129,10 @@ Write an update, choose its category and church, add a cover photo, and set the 
 - **Published** — live on the website.
 - **Needs changes** — sent back to the author with a note.
 
-When a coordinator submits something, a yellow bar appears on your dashboard. Open the story list,
-read it, and either **Approve & publish** or **Send back** with a note explaining what to change.
+When a coordinator submits something it appears under **Needs your attention** on the dashboard,
+with a red count beside **Stories** in the sidebar. You can publish it straight from the dashboard,
+or open it, read it, and either **Approve & publish** or **Send back** with a note explaining what
+to change.
 
 ### Photo consent
 

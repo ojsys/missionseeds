@@ -23,7 +23,7 @@
   # ---------------------------------------------------------------
   # includes/, pages/, migrations/, and DOCS/ are only ever reached through
   # index.php. A direct request must never execute or list anything.
-  RewriteRule ^(includes|pages|migrations|DOCS|bin)(/|$) - [F,L]
+  RewriteRule ^(includes|pages|migrations|DOCS|bin|logs)(/|$) - [F,L]
 
   # ---------------------------------------------------------------
   # FRONT CONTROLLER — clean URLs

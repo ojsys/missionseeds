@@ -44,16 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $items = list_media(120);
 
-$pageTitle = 'Media';
+$pageEyebrow = 'Content';
+$pageTitle   = 'Media library';
+$pageIntro   = 'Photos used as story covers and galleries across the site.';
 $active = 'stories';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Content</div>
-  <h1>Media library</h1>
-  <p>Photos used as story covers and galleries across the site.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

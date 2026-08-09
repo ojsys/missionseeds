@@ -14,16 +14,14 @@ $mine   = $church ? get_stories([
 $pending   = count(array_filter($mine, fn($s) => $s['status'] === 'pending'));
 $published = count(array_filter($mine, fn($s) => $s['status'] === 'published'));
 
-$pageTitle = 'My church';
+$firstName   = explode(' ', trim((string) ($user['full_name'] ?: $user['username'])))[0];
+$pageEyebrow = 'Church portal';
+$pageTitle   = 'Hi, ' . $firstName . ' 🌱';
+$pageIntro   = 'Share what is happening at your church, and keep an eye on your progress.';
+$pageActions = '<a class="btn" href="updates.php">Write an update</a>';
 $active = 'home';
 include __DIR__ . '/partials/header.php';
 ?>
-
-<div class="admin-header">
-  <div class="eyebrow">Church portal</div>
-  <h1>Hi, <?= e(explode(' ', trim((string) ($user['full_name'] ?: $user['username'])))[0]) ?> 🌱</h1>
-  <p>Share what is happening at your church, and keep an eye on your progress.</p>
-</div>
 
 <?php if (!$church): ?>
   <div class="admin-flash error">

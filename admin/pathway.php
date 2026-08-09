@@ -48,16 +48,13 @@ $isNewMilestone = empty($editingMilestone['id']);
 $stages = db()->query('SELECT * FROM pathway_stages ORDER BY sort_order ASC')->fetchAll();
 $byStage = milestones_by_stage(true);
 
-$pageTitle = 'Pathway';
+$pageEyebrow = 'Project';
+$pageTitle   = 'Pathway &amp; milestones';
+$pageIntro   = 'The seven stages are fixed. Edit each one\'s description and status, and record the milestones underneath it.';
 $active = 'pathway';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Project</div>
-  <h1>Pathway &amp; milestones</h1>
-  <p>The seven stages are fixed. Edit each one's description and status, and record the milestones underneath it.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

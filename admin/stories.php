@@ -63,16 +63,13 @@ $churches   = get_churches(true);
 $mediaItems = list_media(48);
 $gallerySet = $isNew ? [] : array_column(story_gallery((int) $editing['id']), 'id');
 
-$pageTitle = 'Stories';
+$pageEyebrow = 'Content';
+$pageTitle   = 'Growth stories';
+$pageIntro   = 'Updates, church stories, training days, planting activity, meetings, and testimonies.';
 $active = 'stories';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Content</div>
-  <h1>Growth stories</h1>
-  <p>Updates, church stories, training days, planting activity, meetings, and testimonies.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

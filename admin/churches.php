@@ -37,16 +37,13 @@ $isNew    = empty($editing['id']);
 $churches = get_churches(true);
 $rollup   = church_rollup();
 
-$pageTitle = 'Churches';
+$pageEyebrow = 'Project';
+$pageTitle   = 'Participating churches';
+$pageIntro   = 'Church profiles power the public Churches page and roll up into the Growth Tracker.';
 $active = 'churches';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Project</div>
-  <h1>Participating churches</h1>
-  <p>Church profiles power the public Churches page and roll up into the Growth Tracker.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

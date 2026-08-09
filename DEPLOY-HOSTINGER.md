@@ -141,7 +141,7 @@ File Manager hides dotfiles until you enable *Show hidden files*.
    Username:  admin
    Password:  SeedlingsAdmin2026!
    ```
-4. After login, **bottom admin bar → Password → change password IMMEDIATELY** to a unique, strong one (use a password manager).
+4. After login, **sidebar → System → My password → change it IMMEDIATELY** to a unique, strong one (use a password manager).
 5. Log out → log back in with the new password. 🎉 Site is live.
 
 ---

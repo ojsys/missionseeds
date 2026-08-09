@@ -82,16 +82,13 @@ $heroImage    = get_setting('hero_image', $DEFAULT_HERO);
 $heroImageUrl = (strpos($heroImage, 'http') === 0) ? $heroImage : rtrim(SITE_URL, '/') . '/' . ltrim($heroImage, '/');
 $isDefaultHero = ($heroImage === $DEFAULT_HERO);
 
-$pageTitle = 'Settings';
+$pageEyebrow = 'Site settings';
+$pageTitle   = 'Settings';
+$pageIntro   = 'These fields power buttons, dates, and contact details across the page — they\'re structured data rather than free text, so they live here instead of the inline editor.';
 $active = 'settings';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Site settings</div>
-  <h1>Settings</h1>
-  <p>These fields power buttons, dates, and contact details across the page — they're structured data rather than free text, so they live here instead of the inline editor.</p>
-</div>
 
 <?php if ($flash): ?>
   <div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div>

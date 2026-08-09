@@ -44,16 +44,13 @@ $labels = [
     'kobo_sync'            => 'KoboToolbox sync ran',
 ];
 
-$pageTitle = 'Activity';
+$pageEyebrow = 'Accounts';
+$pageTitle   = 'Activity log';
+$pageIntro   = 'Every change made through the admin area, newest first. Useful for answering "who changed this, and when".';
 $active = 'audit';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Accounts</div>
-  <h1>Activity log</h1>
-  <p>Every change made through the admin area, newest first. Useful for answering "who changed this, and when".</p>
-</div>
 
 <div class="admin-note">
   IP addresses are stored as one-way hashes, so the log can group repeated activity without

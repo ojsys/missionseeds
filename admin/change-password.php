@@ -48,20 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$pageTitle = 'Change password';
+$pageEyebrow = 'Account';
+$pageTitle   = 'Change password';
+$pageIntro   = $forced
+    ? 'Your account was created with a temporary password. Please choose your own before continuing.'
+    : "Use at least 10 characters. A short phrase you will remember beats a short scramble you won't.";
 $active = 'password';
 include __DIR__ . '/partials/header.php';
 ?>
-
-<div class="admin-header">
-  <div class="eyebrow">Account</div>
-  <h1>Change password</h1>
-  <?php if ($forced): ?>
-    <p>Your account was created with a temporary password. Please choose your own before continuing.</p>
-  <?php else: ?>
-    <p>Use at least 10 characters. A short phrase you will remember beats a short scramble you won't.</p>
-  <?php endif; ?>
-</div>
 
 <?php if ($flash): ?>
   <div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div>

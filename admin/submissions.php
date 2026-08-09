@@ -30,16 +30,13 @@ $items = get_submissions(
 );
 $newCount = count_new_submissions();
 
-$pageTitle = 'Enquiries';
+$pageEyebrow = 'Inbox';
+$pageTitle   = 'Contact and interest enquiries';
+$pageIntro   = 'Messages sent through the website\'s contact form.';
 $active = 'submissions';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Inbox</div>
-  <h1>Contact and interest enquiries</h1>
-  <p>Messages sent through the website's contact form.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

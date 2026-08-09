@@ -75,6 +75,7 @@ function icon_select(string $selected = 'seedling'): string {
 
 function render_group_table(string $group, array $items, bool $hasTitle, ?array $editItem): void {
     ?>
+    <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
@@ -163,19 +164,17 @@ function render_group_table(string $group, array $items, bool $hasTitle, ?array 
       <?php endforeach; ?>
       </tbody>
     </table>
+    </div>
     <?php
 }
 
-$pageTitle = 'Manage lists';
+$pageEyebrow = 'Content lists';
+$pageTitle   = 'Manage lists';
+$pageIntro   = 'These power the "Who should apply" and "What participating churches receive" sections. Reorder with the arrows, hide an item without deleting it, or add a new one.';
 $active = 'lists';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Content lists</div>
-  <h1>Manage lists</h1>
-  <p>These power the "Who should apply" and "What participating churches receive" sections. Reorder with the arrows, hide an item without deleting it, or add a new one.</p>
-</div>
 
 <?php if ($flash): ?>
   <div class="admin-flash <?= e($flashType) ?>"><?= e($flash) ?></div>

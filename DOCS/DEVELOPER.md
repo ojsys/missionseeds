@@ -33,7 +33,12 @@ pages/                   public templates, rendered inside the layout
   partials/story-card.php
 
 admin/                   staff area (super_admin, project_manager, editor)
-portal/                  church coordinator area
+  partials/nav.php       sidebar navigation model + interface icons
+  partials/shell.php     the shared sidebar/topbar chrome
+  partials/header.php    admin entry point into the shell
+  partials/footer.php    closing markup + drawer script
+  partials/form.php      field rendering helpers for the CRUD screens
+portal/                  church coordinator area (same shell, shorter nav)
 migrations/              numbered SQL, run once each, in order
 bin/kobo-sync.php        cron entry point for future Kobo sync
 DOCS/                    this file + the staff guide
@@ -57,6 +62,31 @@ only ever reached through `index.php` or the command line.
 
 `admin/` and `portal/` are ordinary PHP files served directly. They require `bootstrap.php`
 themselves and gate at the top with `require_capability()` or `require_role()`.
+
+### The admin shell
+
+Both areas share one chrome. A page sets a few variables and includes its header:
+
+```php
+$pageEyebrow = 'Project';                 // optional small label
+$pageTitle   = 'Participating churches';  // <title>, and the h1
+$pageIntro   = 'One line of context.';    // optional
+$pageActions = '<a class="btn">…</a>';    // optional, raw HTML, right of the heading
+$active      = 'churches';                // nav key — drives the highlight and breadcrumb
+include __DIR__ . '/partials/header.php';
+```
+
+The sidebar comes from `admin_nav_groups()` / `portal_nav_groups()` in `partials/nav.php`, built
+from capabilities so a role never sees a link it would be refused on. Badge counts (pending
+stories, new enquiries) are read there too. Add a page by adding one entry to the relevant group.
+
+**Scrolling:** the content column scrolls, not the page — `body.admin` is `overflow:hidden` and
+`.shell-main` is the scroll container. This is deliberate. The public stylesheet sets
+`overflow-x:hidden` on `<html>` (the hero and growth vine need it), which makes `<html>` the scroll
+container and silently breaks `position:sticky` for everything inside it. Giving the admin its own
+scrolling column sidesteps that: the sidebar is simply full height, and the topbar sticks inside a
+container that really is the scroller. Below 960px the sidebar becomes a `position:fixed`
+off-canvas drawer, which is unaffected either way.
 
 Adding a page: create `pages/thing.php`, add `'thing' => 'thing'` to `ROUTES`, add its copy keys
 to `CONTENT_KEYS`, and add a nav entry in `nav_items()` if it belongs in the menu.

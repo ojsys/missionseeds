@@ -1,5 +1,6 @@
 # Local developer overrides — never committed, never uploaded
 config.local.php
+config.php
 
 # Uploaded media (regenerated per environment; keep the folder + its .htaccess)
 assets/uploads/*
@@ -11,3 +12,8 @@ assets/uploads/*
 Thumbs.db
 *.swp
 *~
+
+# Application error log
+logs/*
+!logs/.htaccess
+!logs/.gitkeep

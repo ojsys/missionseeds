@@ -91,16 +91,13 @@ $mine = $church ? get_stories([
     'limit'     => 20,
 ]) : [];
 
-$pageTitle = 'My updates';
+$pageEyebrow = 'Church portal';
+$pageTitle   = $isNew ? 'Write an update' : 'Edit your update';
+$pageIntro   = 'Tell us what has been happening — a training day, a planting session, '
+             . "a cooperative meeting, or a member's story.";
 $active = 'updates';
 include __DIR__ . '/partials/header.php';
 ?>
-
-<div class="admin-header">
-  <div class="eyebrow">Church portal</div>
-  <h1><?= $isNew ? 'Write an update' : 'Edit your update' ?></h1>
-  <p>Tell us what has been happening — a training day, a planting session, a cooperative meeting, or a member's story.</p>
-</div>
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 

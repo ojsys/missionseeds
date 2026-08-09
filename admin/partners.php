@@ -73,16 +73,13 @@ $editId   = isset($_GET['edit']) ? (int) $_GET['edit'] : null;
 $editItem = $editId ? get_partner($editId) : null;
 $partners = get_partners(false);
 
-$pageTitle = 'Partners';
+$pageEyebrow = 'Partner logos';
+$pageTitle   = 'Partners';
+$pageIntro   = 'Logos shown in the "Partners" strip near the bottom of the landing page. Reorder with the arrows, hide a partner without deleting it, or add a new one. The section is hidden from the site entirely while there are no visible partners.';
 $active = 'partners';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="admin-header">
-  <div class="eyebrow">Partner logos</div>
-  <h1>Partners</h1>
-  <p>Logos shown in the "Partners" strip near the bottom of the landing page. Reorder with the arrows, hide a partner without deleting it, or add a new one. The section is hidden from the site entirely while there are no visible partners.</p>
-</div>
 
 <?php if ($flash): ?>
   <div class="admin-flash <?= e($flashType) ?>"><?= e($flash) ?></div>
@@ -92,6 +89,7 @@ include __DIR__ . '/partials/header.php';
   <h2>Current partners</h2>
   <p class="hint">Logos look best as transparent PNG or WEBP. They are shown at a uniform height, so wide and square marks both work.</p>
 
+  <div class="table-scroll">
   <table class="data-table">
     <thead>
       <tr>
@@ -184,6 +182,7 @@ include __DIR__ . '/partials/header.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
 
   <details style="margin-top:20px;" <?= $partners ? '' : 'open' ?>>
     <summary style="cursor:pointer; font-weight:600; color:var(--forest); font-size:14.5px;">+ Add a new partner</summary>
