@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $upd->execute([password_hash($new, PASSWORD_DEFAULT), $user['id']]);
             audit('change_password', 'user', (int) $user['id'], $user['username']);
+            notify_password_changed((int) $user['id']);
 
             if ($forced) {
                 header('Location: ' . home_for_role($user['role']));

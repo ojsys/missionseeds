@@ -84,3 +84,4 @@ const SVG_DOWN   = '<path d="M12 5v14M19 12l-7 7-7-7"/>';
 const SVG_EYE    = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
 const SVG_CHECK  = '<path d="M20 6L9 17l-5-5"/>';
 const SVG_KEY    = '<path d="M15 7a4 4 0 11-4 4h-1l-2 2-2-2-2 2v3h3l6-6a4 4 0 012-3z"/>';
+const SVG_SEND   = '<path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3z"/>';

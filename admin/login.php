@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <p class="hint" style="margin-top:18px; text-align:center;">
-      Forgotten your password? Ask a Super Admin to reset it for you.
+      <a href="<?= e(url('/admin/forgot-password.php')) ?>">Forgotten your password?</a>
     </p>
   </div>
 </div>

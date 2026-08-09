@@ -34,6 +34,7 @@ function nav_icon(string $key): string {
         'external'  => '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14 21 3"/>',
         'logout'    => '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
         'home'      => '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/>',
+        'mail'      => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/>',
     ];
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
          . 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
@@ -88,6 +89,9 @@ function admin_nav_groups(): array {
     $system = [];
     if (user_can('manage_settings')) {
         $system[] = ['key' => 'settings', 'label' => 'Settings', 'href' => url('/admin/settings.php'), 'icon' => 'settings'];
+    }
+    if (user_can('manage_users')) {
+        $system[] = ['key' => 'email', 'label' => 'Email', 'href' => url('/admin/email.php'), 'icon' => 'mail'];
     }
     if (user_can('view_audit')) {
         $system[] = ['key' => 'audit', 'label' => 'Activity log', 'href' => url('/admin/audit.php'), 'icon' => 'activity'];

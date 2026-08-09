@@ -28,6 +28,9 @@ includes/
     kobo.php             KoboToolbox API (stubbed until a token is configured)
     submissions.php      contact / interest / partnership enquiries
     users.php            account management + audit log reads
+    tokens.php           single-use invitation and reset tokens
+  mailer.php             SMTP client, templates, delivery log
+  emails/                HTML email templates (layout + one file per message)
 
 pages/                   public templates, rendered inside the layout
   partials/story-card.php
@@ -194,6 +197,14 @@ hostname mismatch; page links do not.)
 
 ## Migrations
 
+**`includes/schema.php` detects unimported migrations** and shows a banner across the admin naming
+the exact file. Migrations are imported by hand through phpMyAdmin, so forgetting one is normal;
+without the check the symptom is a blank page or a 500 with no explanation. When you add a
+migration, add a line to `migration_checks()` — one representative table or column is enough.
+
+Features that need a migration degrade rather than crash: `admin/email.php` explains what to
+import, `get_email_log()` returns empty, and `create_token()` throws a message naming the file.
+
 Numbered, run once, in order. `install.sql` is the original v1 schema; `migrations/002_platform.sql`
 turns it into the full platform and is **not** idempotent (it renames `admin_users` to `users`).
 
@@ -220,6 +231,62 @@ must stay in Kobo.
 
 ---
 
+## Email
+
+`includes/mailer.php` is a small hand-rolled SMTP client — this project has no Composer, so no
+PHPMailer. It does exactly what the site needs and no more: one recipient, multipart/alternative,
+STARTTLS or implicit TLS, AUTH LOGIN. No attachments, no bulk sending. Please do not grow it into a
+general mail library; if the project ever needs that, add Composer and swap it out.
+
+**TLS is verified.** `verify_peer` and `verify_peer_name` are on, and there is deliberately no
+option to disable them — an untrusted certificate fails with a clear message rather than silently
+sending credentials over an unverified connection.
+
+**Configuration** resolves in `mail_config()`: `config.php` constants (`SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USERNAME`, `SMTP_PASSWORD`, …) win, otherwise Settings. The SMTP password in the database is
+AES-256-GCM encrypted with a key derived from `APP_KEY` — see `encrypt_secret()`. **Rotating
+`APP_KEY` makes the stored password undecryptable**; it has to be re-entered.
+
+**Templates** live in `includes/emails/`. Each sets `$subject` and echoes body HTML; `layout.php`
+wraps it. They are table-based with inline styles on purpose — email clients still do not support
+stylesheets or flexbox reliably. A plain-text alternative is generated automatically unless the
+template sets `$text`.
+
+Add one with `render_email('name', $vars)` / `send_email($to, 'name', $vars)`.
+
+**Sending never throws.** A mail failure must not break account creation, so `send_email()` returns
+`['ok' => bool, 'error' => ?string]` and logs to `email_log`. Every caller that matters offers a
+copyable fallback link — email in rural Nigeria is not guaranteed and WhatsApp usually is.
+
+### Enquiry notifications
+
+`notify_new_submission()` in `includes/models/submissions.php`, fired from `pages/contact.php`
+inside a `register_shutdown_function()` that first calls `fastcgi_finish_request()`. The visitor's
+"thank you" page is therefore already delivered before the mail server is contacted — measured at
+~43ms even with SMTP unreachable. Do not move this back inline: a 12-second connect timeout would
+make the contact form feel broken on a slow connection.
+
+The notification deliberately omits the enquirer's email and phone. They stay in the admin inbox
+behind a login, rather than being scattered across staff mailboxes and forwarded threads — the same
+reasoning that keeps enquirer details out of the audit log.
+
+### Tokens
+
+`includes/models/tokens.php`. Invitations and resets share one mechanism, distinguished by
+`password_resets.purpose`: invites last 7 days, resets 2 hours. Only a SHA-256 hash is stored, so a
+database dump cannot be used to take over accounts. Issuing a token retires the previous one of the
+same purpose; completing one retires all of them and clears any login lockout.
+
+`create_user()` gives the account a random unusable password, so an unclaimed invitation is never a
+way in. `reset_user_password()` scrambles the existing password immediately rather than waiting for
+the reset to be completed.
+
+`request_password_reset()` (the public "forgot password" form) returns nothing and says nothing
+about whether the address exists — otherwise the form is an account-enumeration oracle. The page is
+throttled through the same `login_attempts` table.
+
+---
+
 ## Known follow-ups
 
 Deliberately left for a later phase, in rough priority order:
@@ -229,7 +296,8 @@ Deliberately left for a later phase, in rough priority order:
    `assets/fonts/` with `font-display:swap` is the single biggest win for slow connections.
 2. **Automatic image resizing.** Uploads are stored at their original dimensions. Generating a
    WebP thumbnail on upload would cut page weight substantially.
-3. **Email.** Password reset by emailed token is schemed (`password_resets`) but not wired up —
-   Super Admins issue temporary passwords instead. Enable it once Hostinger mail is verified.
+3. **A real mail queue.** Sends happen inline (after the response, for the contact form). One
+   recipient at a time is fine at this scale; a `mail_queue` table drained by cron would be the
+   next step if volume grows.
 4. **GIS map.** `churches.latitude` / `longitude` are captured and staff-only, ready for a map.
 5. **Full-text search** across stories.

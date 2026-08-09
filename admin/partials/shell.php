@@ -128,6 +128,20 @@ foreach ($shellGroups as $g) {
 
     <main class="content" id="admin-content">
       <div class="content-inner">
+        <?php if (($shellPending = pending_migrations()) && user_can('manage_settings')): ?>
+          <div class="admin-flash error" style="margin-bottom:24px;">
+            <strong>The database is behind the code.</strong>
+            <?= count($shellPending) === 1 ? 'One migration has' : count($shellPending) . ' migrations have' ?>
+            not been imported yet, so some features will not work:
+            <ul style="margin:10px 0 6px 18px;">
+              <?php foreach ($shellPending as $m): ?>
+                <li><code><?= e($m['file']) ?></code> — <?= e($m['what']) ?></li>
+              <?php endforeach; ?>
+            </ul>
+            Import <?= count($shellPending) === 1 ? 'it' : 'them' ?> in phpMyAdmin
+            (<em>Import → Choose file</em>), in number order.
+          </div>
+        <?php endif; ?>
         <div class="page-head">
           <div>
             <?php if (!empty($pageEyebrow)): ?><div class="eyebrow"><?= e($pageEyebrow) ?></div><?php endif; ?>

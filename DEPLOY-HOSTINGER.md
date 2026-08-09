@@ -64,7 +64,16 @@ pathway, indicators, stories, resources, enquiries) comes from the migration.
 > Run these **in order and once each**. `002_platform.sql` renames `admin_users` to `users`, so
 > re-running it will error. That is expected and harmless — it means it already ran.
 
-Any future `migrations/003_*.sql` files are imported the same way, in number order, before you
+### 3c. Import `migrations/003_email.sql` — REQUIRED
+
+Adds SMTP settings, the email delivery log, and invitation tokens. Same steps: **Import** →
+`migrations/003_email.sql`.
+
+### 3d. Import `migrations/004_enquiry_notifications.sql` — REQUIRED
+
+Adds the two settings behind "email the team when someone uses the contact form".
+
+Any future `migrations/005_*.sql` files are imported the same way, in number order, before you
 upload code that depends on them.
 
 ### 4. Upload files via File Manager (or FTP / Hostinger Backup Upload)
@@ -219,6 +228,66 @@ After changing admin password + filling Settings, share the site 🎉  — `http
 
 ---
 
+## 📧 Set up email — do this before creating any accounts
+
+New accounts are invited by email: the person clicks a link and chooses their own password. Without
+email working, a Super Admin has to copy each invitation link and pass it on by WhatsApp — which is
+supported, but tedious.
+
+### 1. Create a mailbox
+hPanel → **Emails** → **Email Accounts** → *Create email account*, e.g.
+`noreply@missionseedlings.com`. Save the password.
+
+### 2. Find the SMTP details
+On the same screen, open **Connect Devices & Apps**. Hostinger shows the outgoing settings —
+normally:
+
+```
+Outgoing server (SMTP):  smtp.hostinger.com
+Port:                    587   (STARTTLS)   — or 465 for SSL
+Username:                the full email address
+Password:                the mailbox password
+```
+
+### 3. Enter them on the site
+Sign in, then **System → Email**:
+
+1. Fill in host, port, security, username, and password
+2. **From address:** the mailbox you just created. It must be on your own domain — a Gmail or Yahoo
+   From address will be rejected or spam-filed by the receiving server.
+3. Tick **Send email through SMTP** and save
+4. Press **Send a test email** to yourself and confirm it arrives
+
+> The password is stored encrypted using `APP_KEY` from `config.php`. If you ever change `APP_KEY`,
+> the saved SMTP password can no longer be decrypted and must be entered again.
+
+### 4. Improve deliverability (recommended)
+Without these, invitations often land in spam:
+
+- **SPF** — hPanel → DNS zone editor. Hostinger usually adds this automatically; confirm a TXT
+  record on the root domain containing `v=spf1 include:_spf.mail.hostinger.com ~all`.
+- **DKIM** — hPanel → Emails → *Email deliverability / DNS settings*, then follow the prompt to
+  enable it.
+
+Ask one recipient to check their spam folder on the first real invitation, and mark it "not spam"
+if it landed there.
+
+### 5. Turn on enquiry notifications (optional)
+**System → Email → Enquiry notifications.** Tick it on and give the addresses that should hear
+about new contact-form messages. Without this, someone has to remember to check the inbox.
+
+### Prefer to keep credentials in a file?
+Add these to `config.php` and they override the admin screen entirely:
+
+```php
+defined('SMTP_HOST')     || define('SMTP_HOST', 'smtp.hostinger.com');
+defined('SMTP_PORT')     || define('SMTP_PORT', 587);
+defined('SMTP_USERNAME') || define('SMTP_USERNAME', 'noreply@missionseedlings.com');
+defined('SMTP_PASSWORD') || define('SMTP_PASSWORD', 'the-mailbox-password');
+```
+
+---
+
 ## 🔁 Optional: KoboToolbox sync cron
 
 Not needed for launch — the site links to Kobo forms and project managers type the tracker figures
@@ -266,3 +335,7 @@ A restore is: import the `.sql` export into the database, then re-upload `assets
 | Photo uploads fail | `assets/uploads/` not writable | CHMOD 775 (step 5) |
 | Locked out of admin | 5 failed logins | Wait 15 minutes, or in phpMyAdmin run `DELETE FROM login_attempts;` |
 | Lost the only admin password | — | In phpMyAdmin, run `UPDATE users SET password_hash = '<hash>', must_change_password = 1 WHERE username = 'admin';` using a hash from a bcrypt generator |
+| Invitations never arrive | SMTP not set up, or wrong details | System → Email → *Recent email* shows the error. Send a test email to yourself |
+| Invitations land in spam | No SPF/DKIM, or a From address off your domain | See "Improve deliverability" above |
+| "The mail server rejected the username or password" | Wrong mailbox password, or username is not the full email address | Re-enter both in System → Email |
+| "The mail server refused the secure (TLS) handshake" | Wrong port/security pairing | Use 587 with STARTTLS, or 465 with SSL |

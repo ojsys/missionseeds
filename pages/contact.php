@@ -26,6 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result['ok']) {
             $sent = true;
             audit('contact_submission', 'submission', $result['id'], $form['type']);
+
+            // Notify the team *after* the visitor has their "thank you" page.
+            // Talking to a mail server can take seconds, and on a slow
+            // connection in Jos nobody should sit watching a spinner for it.
+            $newId = (int) $result['id'];
+            register_shutdown_function(function () use ($newId) {
+                // Releases the browser on PHP-FPM; harmless elsewhere.
+                if (function_exists('fastcgi_finish_request')) {
+                    @fastcgi_finish_request();
+                }
+                notify_new_submission($newId);
+            });
         } else {
             $errors = $result['errors'];
         }

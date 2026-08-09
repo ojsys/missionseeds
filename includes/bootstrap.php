@@ -11,6 +11,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/icons.php';
 require_once __DIR__ . '/content_keys.php';
+require_once __DIR__ . '/schema.php';
 
 require_once __DIR__ . '/models/project.php';
 require_once __DIR__ . '/models/stories.php';
@@ -18,6 +19,8 @@ require_once __DIR__ . '/models/resources.php';
 require_once __DIR__ . '/models/kobo.php';
 require_once __DIR__ . '/models/submissions.php';
 require_once __DIR__ . '/models/users.php';
+require_once __DIR__ . '/models/tokens.php';
+require_once __DIR__ . '/mailer.php';
 
 /**
  * The site's path prefix, empty for a domain root install and "/seedlings"

@@ -83,6 +83,63 @@ function create_submission(array $data): array {
     return ['ok' => true, 'errors' => [], 'id' => (int) db()->lastInsertId()];
 }
 
+/* ===========================================================================
+   Notifications
+   =========================================================================== */
+
+/** Addresses to notify, falling back to the site contact address. */
+function enquiry_notify_recipients(): array {
+    $raw = trim(get_setting('notify_enquiries_to'));
+    if ($raw === '') {
+        $raw = trim(get_setting('contact_email'));
+    }
+    $out = [];
+    foreach (preg_split('/[,;\s]+/', $raw) ?: [] as $addr) {
+        $addr = trim($addr);
+        if ($addr !== '' && filter_var($addr, FILTER_VALIDATE_EMAIL)) {
+            $out[] = $addr;
+        }
+    }
+    return array_values(array_unique($out));
+}
+
+function enquiry_notifications_enabled(): bool {
+    return get_setting('notify_enquiries', '0') === '1' && enquiry_notify_recipients() !== [];
+}
+
+/**
+ * Emails the team about a new enquiry.
+ *
+ * Called after the response has been sent to the visitor (see pages/contact.php),
+ * so a slow or unreachable mail server never makes the contact form feel broken.
+ * Never throws — a failed notification must not affect the enquirer.
+ */
+function notify_new_submission(int $submissionId): void {
+    try {
+        if (!enquiry_notifications_enabled()) {
+            return;
+        }
+        $s = get_submission($submissionId);
+        if (!$s) return;
+
+        foreach (enquiry_notify_recipients() as $to) {
+            send_email($to, 'new-enquiry', [
+                'enquiryName'  => $s['name'],
+                'enquiryType'  => SUBMISSION_TYPES[$s['type']] ?? 'Enquiry',
+                // Truncated on purpose: this is a nudge to go and read it, not a copy.
+                'excerpt'      => excerpt_from($s['message'], 400),
+                'churchName'   => $s['church_name'],
+                'community'    => $s['community'],
+                'organisation' => $s['organisation'],
+                'receivedAt'   => format_date($s['created_at'], 'j F Y, H:i'),
+                'inboxUrl'     => url('/admin/submissions.php?status=new'),
+            ]);
+        }
+    } catch (Throwable $e) {
+        error_log('[Seedlings enquiry notify] ' . $e->getMessage());
+    }
+}
+
 function get_submissions(?string $status = null, ?string $type = null, int $limit = 100): array {
     $sql    = 'SELECT * FROM submissions WHERE 1=1';
     $params = [];

@@ -24,18 +24,55 @@ function get_user(int $id): ?array {
     return $stmt->fetch() ?: null;
 }
 
-/** A readable temporary password: easy to relay by phone, still ~62 bits. */
-function generate_temp_password(): string {
-    $words = ['coffee', 'harvest', 'seedling', 'plateau', 'cluster', 'orchard', 'sunrise',
-              'terrace', 'lantern', 'compass', 'meadow', 'summit', 'cascade', 'thicket'];
-    return $words[random_int(0, count($words) - 1)] . '-'
-         . $words[random_int(0, count($words) - 1)] . '-'
-         . str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+/**
+ * Sends (or re-sends) an invitation to an account.
+ *
+ * Always returns the link as well as the send result. Email on shared hosting
+ * and in rural Nigeria is not guaranteed, and WhatsApp usually is — so when
+ * delivery fails, or the person has no email address, the admin gets a link
+ * they can pass on another way. A link is safe to relay: it expires, works
+ * once, and never reveals a password.
+ *
+ * @return array{sent: bool, error: ?string, link: string}
+ */
+function send_invitation(int $userId, bool $isNewAccount = true): array {
+    $target = get_user($userId);
+    if (!$target) {
+        throw new RuntimeException('Account not found.');
+    }
+
+    $raw  = create_token($userId, 'invite');
+    $link = token_url($raw);
+    $me   = current_user();
+
+    audit($isNewAccount ? 'invite_user' : 'reinvite_user', 'user', $userId, $target['username']);
+
+    if (empty($target['email'])) {
+        return ['sent' => false, 'link' => $link,
+                'error' => 'This account has no email address, so nothing could be sent.'];
+    }
+
+    $result = send_email($target['email'], 'invite', [
+        'name'          => $target['full_name'] ?: $target['username'],
+        'username'      => $target['username'],
+        'roleLabel'     => role_label($target['role']),
+        'churchName'    => $target['church_name'] ?? null,
+        'invitedBy'     => $me['full_name'] ?: ($me['username'] ?? 'A Super Admin'),
+        'inviteUrl'     => $link,
+        'expiresLabel'  => token_expiry_label('invite'),
+    ], $userId);
+
+    return ['sent' => $result['ok'], 'error' => $result['error'], 'link' => $link];
 }
 
 /**
- * Creates an account.
- * @return array{id:int, temp_password:string}
+ * Creates an account and invites the person to set their own password.
+ *
+ * The account is given a random unusable password: it can only be signed into
+ * after the invitation is completed, so an account that is never claimed is
+ * never a way in.
+ *
+ * @return array{id: int, sent: bool, error: ?string, link: string}
  */
 function create_user(array $data): array {
     $username = strtolower(trim((string) ($data['username'] ?? '')));
@@ -73,16 +110,16 @@ function create_user(array $data): array {
         }
     }
 
-    $temp    = generate_temp_password();
     $creator = current_user();
 
+    // Random, never shown to anyone: the invitation is the only way in.
     db()->prepare(
         'INSERT INTO users (username, password_hash, role, full_name, email, church_id, is_active,
                             must_change_password, created_by)
          VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?)'
     )->execute([
         $username,
-        password_hash($temp, PASSWORD_DEFAULT),
+        password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT),
         $role,
         trim((string) ($data['full_name'] ?? '')) ?: null,
         $email ?: null,
@@ -92,7 +129,9 @@ function create_user(array $data): array {
 
     $id = (int) db()->lastInsertId();
     audit('create_user', 'user', $id, $username . ' (' . role_label($role) . ')');
-    return ['id' => $id, 'temp_password' => $temp];
+
+    $invite = send_invitation($id, true);
+    return ['id' => $id] + $invite;
 }
 
 /** Updates profile fields and role. Never touches the password. */
@@ -159,20 +198,78 @@ function count_active_super_admins(): int {
     return (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND is_active = 1")->fetchColumn();
 }
 
-/** Issues a new temporary password and forces a change at next sign-in. */
-function reset_user_password(int $id): string {
+/**
+ * Starts an admin-initiated password reset: the current password stops working
+ * immediately and the person is emailed a link to choose a new one.
+ *
+ * @return array{sent: bool, error: ?string, link: string}
+ */
+function reset_user_password(int $id): array {
     $target = get_user($id);
     if (!$target) throw new RuntimeException('Account not found.');
 
-    $temp = generate_temp_password();
+    // Scramble the existing password so a compromised one cannot keep being used
+    // while the reset sits unread.
     db()->prepare(
         'UPDATE users SET password_hash = ?, must_change_password = 1, password_changed_at = NULL WHERE id = ?'
-    )->execute([password_hash($temp, PASSWORD_DEFAULT), $id]);
+    )->execute([password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT), $id]);
 
-    // Any outstanding reset links for this account stop working.
-    db()->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([$id]);
+    $raw  = create_token($id, 'reset');
+    $link = token_url($raw);
     audit('reset_password', 'user', $id, $target['username']);
-    return $temp;
+
+    if (empty($target['email'])) {
+        return ['sent' => false, 'link' => $link,
+                'error' => 'This account has no email address, so nothing could be sent.'];
+    }
+
+    $result = send_email($target['email'], 'password-reset', [
+        'name'         => $target['full_name'] ?: $target['username'],
+        'resetUrl'     => $link,
+        'expiresLabel' => token_expiry_label('reset'),
+        'byAdmin'      => true,
+    ], $id);
+
+    return ['sent' => $result['ok'], 'error' => $result['error'], 'link' => $link];
+}
+
+/**
+ * Handles a "forgot password" request from the sign-in page.
+ *
+ * Deliberately says nothing about whether the address exists — otherwise the
+ * form becomes a way to enumerate who has an account.
+ */
+function request_password_reset(string $email): void {
+    $email = trim($email);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return;
+    }
+    $stmt = db()->prepare('SELECT id, username, full_name FROM users WHERE email = ? AND is_active = 1 LIMIT 1');
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        return;
+    }
+
+    $raw = create_token((int) $user['id'], 'reset');
+    send_email($email, 'password-reset', [
+        'name'         => $user['full_name'] ?: $user['username'],
+        'resetUrl'     => token_url($raw),
+        'expiresLabel' => token_expiry_label('reset'),
+        'byAdmin'      => false,
+    ], (int) $user['id']);
+
+    audit('request_password_reset', 'user', (int) $user['id'], $user['username']);
+}
+
+/** Security notice after any successful password change. Failure is not fatal. */
+function notify_password_changed(int $userId): void {
+    $target = get_user($userId);
+    if (!$target || empty($target['email'])) return;
+    send_email($target['email'], 'password-changed', [
+        'name'      => $target['full_name'] ?: $target['username'],
+        'whenLabel' => date('j F Y \a\t H:i'),
+    ], $userId);
 }
 
 function delete_user(int $id): void {

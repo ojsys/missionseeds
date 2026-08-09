@@ -22,7 +22,7 @@ each new application cycle from Settings.
 index.php        front controller
 config.php       database credentials + SITE_URL — EDIT THIS FIRST
 install.sql      v1 schema — import first
-migrations/      002_platform.sql — import second
+migrations/      002, 003, 004 — import in number order
 DOCS/            staff guide and developer notes
 ```
 
@@ -37,6 +37,8 @@ DOCS/            staff guide and developer notes
 2. **Import the schema**, in this order, via phpMyAdmin → Import:
    - `install.sql`
    - `migrations/002_platform.sql`
+   - `migrations/003_email.sql`
+   - `migrations/004_enquiry_notifications.sql`
 
 3. **Upload the files** to `public_html/`, keeping the folder structure intact.
 
@@ -69,7 +71,10 @@ Full deployment detail, including the cron job and backups, is in `DEPLOY-HOSTIN
 
 ## Accounts
 
-Four roles, invite-only — there is no public sign-up anywhere.
+Four roles, invite-only — there is no public sign-up anywhere. A Super Admin creates the account
+and the person is emailed a link to choose their own password; nobody else ever sees it. Set up
+SMTP under **System → Email** first (see `DEPLOY-HOSTINGER.md`). If email is unavailable, the
+invitation link is shown on screen to pass on by WhatsApp — it expires and works once.
 
 | Role | Area | What they do |
 |---|---|---|
@@ -117,7 +122,11 @@ Live API sync is scaffolded and needs no schema change to enable: set `KOBO_API_
 
 ## Security summary
 
-- Passwords hashed with bcrypt; temporary passwords forced to change on first sign-in
+- Passwords hashed with bcrypt and chosen by the account holder — never issued or seen by an admin
+- Invitation and reset tokens stored as SHA-256 hashes, single-use, time-limited
+- SMTP password encrypted at rest (AES-256-GCM) and write-only in the admin UI
+- Outgoing mail verifies TLS certificates, with no option to disable it
+- "Forgot password" reveals nothing about whether an address has an account
 - Role-based access enforced by capability, checked server-side on every page
 - Login throttling, session idle and absolute timeouts, user-agent binding
 - CSRF tokens on every form

@@ -5,32 +5,55 @@ require_once __DIR__ . '/partials/form.php';
 
 $flash = '';
 $flashType = '';
-$tempPassword = null;
-$tempFor = null;
+$invite = null;      // ['kind','name','sent','error','link'] after a create/invite/reset
 $editing = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
     try {
         switch ($_POST['action'] ?? '') {
-            case 'create':
-                $result = create_user($_POST);
-                $tempPassword = $result['temp_password'];
-                $tempFor = $_POST['username'];
+            case 'create': {
+                $result  = create_user($_POST);
+                $created = get_user($result['id']);
+                $invite  = [
+                    'kind'  => 'invite',
+                    'name'  => $created['full_name'] ?: $created['username'],
+                    'email' => $created['email'],
+                ] + $result;
                 $flash = 'Account created.';
                 break;
+            }
+
+            case 'resend': {
+                $id     = (int) $_POST['id'];
+                $target = get_user($id);
+                $result = send_invitation($id, false);
+                $invite = [
+                    'kind'  => 'invite',
+                    'name'  => $target['full_name'] ?: $target['username'],
+                    'email' => $target['email'],
+                ] + $result;
+                $flash = 'Invitation re-sent.';
+                break;
+            }
 
             case 'update':
                 update_user((int) $_POST['id'], $_POST);
                 $flash = 'Account updated.';
                 break;
 
-            case 'reset':
-                $tempPassword = reset_user_password((int) $_POST['id']);
-                $target  = get_user((int) $_POST['id']);
-                $tempFor = $target['username'] ?? '';
-                $flash = 'Password reset.';
+            case 'reset': {
+                $id     = (int) $_POST['id'];
+                $target = get_user($id);
+                $result = reset_user_password($id);
+                $invite = [
+                    'kind'  => 'reset',
+                    'name'  => $target['full_name'] ?: $target['username'],
+                    'email' => $target['email'],
+                ] + $result;
+                $flash = 'Password reset started.';
                 break;
+            }
 
             case 'delete':
                 delete_user((int) $_POST['id']);
@@ -55,7 +78,7 @@ $me       = current_user();
 
 $pageEyebrow = 'Accounts';
 $pageTitle   = 'Users and roles';
-$pageIntro   = 'Accounts are created here — there is no public sign-up. New users receive a temporary password and must choose their own on first sign-in.';
+$pageIntro   = 'Accounts are created here — there is no public sign-up. New users are emailed an invitation and choose their own password; nobody else ever sees it.';
 $active = 'users';
 include __DIR__ . '/partials/header.php';
 ?>
@@ -63,15 +86,40 @@ include __DIR__ . '/partials/header.php';
 
 <?php if ($flash): ?><div class="admin-flash <?= $flashType ?>"><?= e($flash) ?></div><?php endif; ?>
 
-<?php if ($tempPassword): ?>
-<div class="panel" style="border-color:var(--gold);">
-  <h2>Temporary password for <?= e($tempFor) ?></h2>
-  <p class="hint">
-    Give this to them directly — in person, by phone, or over WhatsApp. It is shown once
-    and cannot be retrieved later; if it gets lost, just reset the password again.
-  </p>
-  <div class="temp-password"><?= e($tempPassword) ?></div>
-  <p class="hint" style="margin-bottom:0;">They will be asked to set their own password as soon as they sign in.</p>
+<?php if ($invite): ?>
+<div class="panel" style="border-color:<?= $invite['sent'] ? 'var(--sprout)' : 'var(--gold)' ?>;">
+  <?php if ($invite['sent']): ?>
+    <div class="panel-head">
+      <h2><?= $invite['kind'] === 'invite' ? 'Invitation sent' : 'Reset link sent' ?></h2>
+      <span class="pill ok">Emailed</span>
+    </div>
+    <p class="hint">
+      Sent to <strong><?= e($invite['email']) ?></strong>.
+      <?= $invite['kind'] === 'invite'
+          ? 'They have 7 days to choose their password.'
+          : 'The link expires in 2 hours, and their old password no longer works.' ?>
+      Nobody but <?= e($invite['name']) ?> will ever know the password.
+    </p>
+    <details style="margin-top:6px;">
+      <summary class="help" style="cursor:pointer;">Need to send it another way as well?</summary>
+      <p class="hint" style="margin:10px 0 6px;">The same link — safe to send over WhatsApp:</p>
+      <div class="temp-password" style="font-size:12.5px; word-break:break-all;"><?= e($invite['link']) ?></div>
+    </details>
+  <?php else: ?>
+    <div class="panel-head">
+      <h2>Account ready — but the email did not send</h2>
+      <span class="pill warn">Not emailed</span>
+    </div>
+    <p class="hint">
+      <?= e($invite['error'] ?? 'Email is not configured.') ?>
+      Send <strong><?= e($invite['name']) ?></strong> the link below instead — WhatsApp is fine.
+      It works once and expires, so it is safe to pass on.
+    </p>
+    <div class="temp-password" style="font-size:12.5px; word-break:break-all;"><?= e($invite['link']) ?></div>
+    <p class="hint" style="margin-bottom:0;">
+      <a href="email.php">Set up email</a> so this happens automatically next time.
+    </p>
+  <?php endif; ?>
 </div>
 <?php endif; ?>
 
@@ -144,7 +192,10 @@ include __DIR__ . '/partials/header.php';
     </div>
     <div class="two-col">
       <?php
-        field_text('email', 'Email (optional)', '', ['type' => 'email']);
+        field_text('email', 'Email address', '', [
+            'type' => 'email',
+            'help' => 'The invitation is sent here. Without it you will have to pass the link on yourself.',
+        ]);
         field_select('role', 'Role', ROLES, 'editor');
       ?>
     </div>
@@ -171,7 +222,9 @@ include __DIR__ . '/partials/header.php';
             <strong><?= e($u['full_name'] ?: $u['username']) ?></strong>
             <?php if ((int) $u['id'] === (int) $me['id']): ?><span class="pill">You</span><?php endif; ?>
             <br><span class="help"><?= e($u['username']) ?><?= $u['email'] ? ' · ' . e($u['email']) : '' ?></span>
-            <?php if ($u['must_change_password']): ?><br><span class="pill warn">Must set password</span><?php endif; ?>
+            <?php if ($u['must_change_password']): ?>
+              <br><span class="pill warn"><?= $u['last_login_at'] ? 'Reset pending' : 'Invitation pending' ?></span>
+            <?php endif; ?>
             <?php if (!$u['is_active']): ?><br><span class="pill muted">Deactivated</span><?php endif; ?>
           </td>
           <td><span class="role-chip role-<?= e($u['role']) ?>"><?= e(role_label($u['role'])) ?></span></td>
@@ -181,8 +234,17 @@ include __DIR__ . '/partials/header.php';
             <a href="users.php?edit=<?= (int) $u['id'] ?>" title="Edit">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><?= SVG_EDIT ?></svg>
             </a>
+            <?php if ($u['must_change_password']): ?>
             <form method="post" style="display:inline;"
-                  onsubmit="return confirm('Issue a new temporary password for <?= e(addslashes($u['username'])) ?>? Their current password stops working.');">
+                  onsubmit="return confirm('Send <?= e(addslashes($u['username'])) ?> a fresh invitation link? Any earlier link stops working.');">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action" value="resend">
+              <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
+              <?= action_button(SVG_SEND, 'Re-send invitation') ?>
+            </form>
+            <?php endif; ?>
+            <form method="post" style="display:inline;"
+                  onsubmit="return confirm('Start a password reset for <?= e(addslashes($u['username'])) ?>? Their current password stops working immediately and they are emailed a link.');">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="reset">
               <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">

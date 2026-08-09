@@ -184,6 +184,17 @@ include __DIR__ . '/partials/header.php';
     </div>
   </div>
 
+  <?php if (user_can('manage_users')): ?>
+  <div class="panel">
+    <h2>Email</h2>
+    <p class="hint" style="margin-bottom:16px;">
+      SMTP details, invitation and password-reset delivery, and enquiry notifications live on their
+      own screen.
+    </p>
+    <a class="btn secondary" href="email.php" style="text-decoration:none;">Open email settings</a>
+  </div>
+  <?php endif; ?>
+
   <div class="panel">
     <h2>Site identity</h2>
     <p class="hint">Shown in the navigation bar, browser tab, and footer.</p>

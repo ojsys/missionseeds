@@ -9,14 +9,21 @@ Everything you need to run the website day to day. No technical knowledge assume
 
 ## 1. Signing in
 
-Go to the sign-in page and enter the username and password you were given.
+**The first time:** you will receive an email inviting you to the site. Click the button in it and
+choose your own password. The link works once and lasts 7 days. Nobody else — not even the person
+who created your account — ever sees the password you pick.
 
-If it is your first time, you will be asked to choose your own password straight away. Pick
-something at least 10 characters long — a short phrase you will remember beats a short scramble
-you won't.
+If the email has not arrived, check the spam folder, then ask a Super Admin to send it again. They
+can also pass you the same link over WhatsApp if email is not getting through.
 
-**If you forget your password,** ask a Super Admin to reset it. They will give you a new
-temporary one and you will choose your own again on the next sign-in.
+**After that:** go to the sign-in page and enter your username and password.
+
+Pick something at least 10 characters long — a short phrase you will remember beats a short
+scramble you won't.
+
+**If you forget your password,** click *Forgotten your password?* on the sign-in page. You will be
+emailed a link to choose a new one; it expires in two hours. A Super Admin can also start a reset
+for you.
 
 **Five wrong password attempts** locks the account for 15 minutes. That is deliberate — it stops
 anyone guessing their way in. Wait it out and try again.
@@ -182,6 +189,9 @@ with the website navigation stripped out.
 
 **Admin → Enquiries.** Messages from the website's contact form.
 
+Turn on **System → Email → Enquiry notifications** and the team is emailed whenever one arrives,
+so nobody has to keep checking.
+
 Mark each one **Read**, **Responded**, or **Archived** as you deal with it, and add an internal
 note if a colleague needs the context.
 
@@ -215,11 +225,22 @@ it to *Hidden* to take the page down entirely.
 
 **Admin → Users** (Super Admins only).
 
-To add someone: fill in a username, name, and role, then press Create. The system shows a
-**temporary password once** — copy it and give it to them directly, by phone or WhatsApp. They must
-choose their own password when they first sign in.
+To add someone: fill in a username, full name, **email address**, and role, then press Create.
+They are emailed an invitation and choose their own password. You never see it, and neither does
+anyone else.
 
-If it gets lost, just reset the password again. It cannot be looked up.
+The account shows **Invitation pending** in the list until they have done so. If the email does not
+reach them, use the ✈ button to send a fresh invitation, or copy the link the screen shows you and
+send it over WhatsApp — the link expires and works only once, so it is safe to pass on that way.
+
+**If email is not set up yet**, or the send fails, the account is still created and the screen gives
+you the link to pass on. Nothing is lost.
+
+**To reset someone's password**, use the 🔑 button. Their current password stops working straight
+away and they are emailed a link to choose a new one.
+
+Everyone gets an email whenever their password changes, so an unexpected one is a warning sign
+worth acting on.
 
 For a **church coordinator**, you must also choose their church. That is the only church they will
 be able to post about.
@@ -246,6 +267,40 @@ caption.
 
 ---
 
+## 12b. Email settings
+
+**System → Email** (Super Admins only).
+
+The site sends three kinds of message: invitations, password resets, and a notice whenever a
+password changes. For any of them to arrive, the SMTP details have to be filled in.
+
+Get them from your mailbox provider. On Hostinger: hPanel → Emails → Email Accounts →
+*Connect Devices & Apps*, which lists the outgoing server, port, and username.
+
+1. Fill in the host, port, security, username, and password
+2. Set the **From address** to a mailbox on your own domain — anything else gets treated as spam
+3. Tick **Send email through SMTP** and save
+4. Use **Send a test email** to prove it works before relying on it
+
+The password is stored encrypted and never shown again. Leave the field blank when saving to keep
+the one already there.
+
+### Being told about new enquiries
+
+On the same page, **Enquiry notifications** emails the team whenever someone uses the contact form,
+so the inbox does not have to be checked on the off-chance. Tick it on and give one or more
+addresses, separated by commas.
+
+The notification tells you who wrote, what it is about, and the opening of their message — but
+**not their email address or phone number**. Those stay on the enquiry itself, behind a sign-in,
+rather than being copied into staff mailboxes and forwarded around. The email links straight to it.
+
+**Recent email** at the bottom of the page shows what the site has tried to send and whether it
+worked — the first place to look when someone says an invitation never arrived. Message contents
+are deliberately not stored, because invitations contain single-use sign-in links.
+
+---
+
 ## 13. If something goes wrong
 
 **A page shows an error.** Try again in a minute. If it persists, contact your developer with the
@@ -254,7 +309,15 @@ page address and roughly when it happened.
 **Someone changed something and nobody knows who.** Admin → Activity shows every change, who made
 it, and when.
 
+**A red "the database is behind the code" banner appears.** Some new features need a database
+import that has not been done yet. The banner names the exact file. Send it to your developer, or
+follow the import steps in `DEPLOY-HOSTINGER.md`.
+
 **A photo won't upload.** It is probably too large — anything over 4MB is rejected. Compress it at
 squoosh.app first. This also keeps the site fast for people on slow connections, which matters.
 
-**You're locked out.** Wait 15 minutes, or ask another Super Admin to reset your password.
+**You're locked out.** Wait 15 minutes, or use *Forgotten your password?* on the sign-in page.
+
+**An invitation never arrived.** Check System → Email → *Recent email* to see whether it sent. If it
+failed, the error there usually says why. Either way you can re-send the invitation, or copy the
+link and send it by WhatsApp.
