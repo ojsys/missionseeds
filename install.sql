@@ -40,10 +40,10 @@ CREATE TABLE IF NOT EXISTS admin_users (
 
 -- Default admin login: username "admin", password "SeedlingsAdmin2026!"
 -- CHANGE THIS PASSWORD immediately after your first login (Admin > Change password).
-INSERT INTO admin_users (username, password_hash) VALUES
+INSERT IGNORE INTO admin_users (username, password_hash) VALUES
 ('admin', '$2y$10$uUFVxgFPKP/C/REZkRCrDOrqVmCRbVDs1nb1BrUssK.WodDLguyh.');
 
-INSERT INTO settings (setting_key, setting_value) VALUES
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('site_title',        'Seedlings'),
 ('tagline',            'Growing Local. Flourishing Together.'),
 
@@ -87,13 +87,13 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 
 ('footer_tagline',     'Planting hope. Growing enterprises. Transforming communities for generations.');
 
-INSERT INTO list_items (group_key, icon_key, title, body, sort_order) VALUES
+INSERT IGNORE INTO list_items (group_key, icon_key, title, body, sort_order) VALUES
 ('criteria', 'land',      NULL, 'Have land suitable for community enterprise.', 1),
 ('criteria', 'people',    NULL, 'Are passionate about empowering women and youth.', 2),
 ('criteria', 'target',    NULL, 'Desire sustainable, measurable community impact.', 3),
 ('criteria', 'handshake', NULL, 'Are willing to participate in long-term cooperative development.', 4);
 
-INSERT INTO list_items (group_key, icon_key, title, body, sort_order) VALUES
+INSERT IGNORE INTO list_items (group_key, icon_key, title, body, sort_order) VALUES
 ('receive', 'book',      'Technical training', '', 1),
 ('receive', 'network',   'Cooperative development support', '', 2),
 ('receive', 'seedling',  'Coffee seedlings', '', 3),

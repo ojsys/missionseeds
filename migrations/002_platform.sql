@@ -104,7 +104,8 @@ INSERT INTO pathway_stages (stage_key, name, short_description, icon_key, status
 ('plant',    'Plant',    'Seedlings are distributed and planted — ten to twenty per participant — on church and member land.', 'seedling', 'not_started', 'Scheduled for the coming planting season', 4),
 ('nurture',  'Nurture',  'Monthly cooperative meetings, savings contributions, tree care, and progress reporting keep the young trees and the group healthy.', 'sun', 'not_started', NULL, 5),
 ('harvest',  'Harvest',  'Mature trees produce their first cherries and the cooperative is connected to fair-trade coffee buyers.', 'coffee', 'not_started', NULL, 6),
-('flourish', 'Flourish', 'The eighteen-month fund matures, members access their savings, and the cooperative reinvests — becoming self-sustaining and ready to mentor the next church.', 'growth', 'not_started', NULL, 7);
+('flourish', 'Flourish', 'The eighteen-month fund matures, members access their savings, and the cooperative reinvests — becoming self-sustaining and ready to mentor the next church.', 'growth', 'not_started', NULL, 7)
+ON DUPLICATE KEY UPDATE name = pathway_stages.name;
 
 CREATE TABLE IF NOT EXISTS milestones (
   id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -192,7 +193,8 @@ INSERT INTO indicators (indicator_key, label, value_num, unit, icon_key, display
 ('trees_planted',        'Trees planted',             0, NULL,     'land',      'integer', 1, 0, 5),
 ('meetings_completed',   'Monthly meetings completed',0, NULL,     'calendar',  'integer', 1, 0, 6),
 ('reports_submitted',    'Reports submitted',         0, NULL,     'checklist', 'integer', 1, 0, 7),
-('survival_rate',        'Seedling survival rate',    0, '%',      'sun',       'percent', 1, 0, 8);
+('survival_rate',        'Seedling survival rate',    0, '%',      'sun',       'percent', 1, 0, 8)
+ON DUPLICATE KEY UPDATE label = indicators.label;
 
 CREATE TABLE IF NOT EXISTS indicator_history (
   id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -297,7 +299,7 @@ CREATE TABLE IF NOT EXISTS kobo_forms (
   KEY active_idx (is_active, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO kobo_forms (name, description, purpose, visibility, sort_order) VALUES
+INSERT IGNORE INTO kobo_forms (name, description, purpose, visibility, sort_order) VALUES
 ('Participant registration', 'Register cooperative members for a participating church. Collects personal data — field staff only.', 'registration', 'staff', 1),
 ('Monthly cooperative report', 'Meeting attendance, savings activity, and cooperative health for the month.', 'monthly_report', 'coordinator', 2),
 ('Tree monitoring', 'Per-plot survival counts and tree health observations.', 'tree_monitoring', 'coordinator', 3);
