@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS partners (
   KEY sort_order_idx (sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
+INSERT INTO settings (setting_key, setting_value) VALUES
 ('partners_eyebrow',  'Partners'),
 ('partners_heading',  'Growing together'),
-('partners_intro',    'Seedlings grows through partnership — with churches, cooperatives, and organisations investing in Plateau State for the long haul.');
+('partners_intro',    'Seedlings grows through partnership — with churches, cooperatives, and organisations investing in Plateau State for the long haul.')
+ON DUPLICATE KEY UPDATE setting_value = settings.setting_value;

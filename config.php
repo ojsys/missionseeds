@@ -51,6 +51,21 @@ define('UPLOAD_DIR', BASE_PATH . '/assets/uploads');
 define('UPLOAD_URL', SITE_URL . '/assets/uploads');
 
 // ---------------------------------------------------------------------
+// Application error log. Find it quickly via FTP / hPanel File Manager:
+//   logs/app.log
+// The logs/ folder has its own .htaccess blocking every HTTP request,
+// so the file can never be downloaded from the web — even if the web
+// server ignores the outer rules.
+// ---------------------------------------------------------------------
+define('LOG_DIR',  BASE_PATH . '/logs');
+define('LOG_PATH', LOG_DIR . '/app.log');
+if (!is_dir(LOG_DIR)) {
+    @mkdir(LOG_DIR, 0750, true);
+}
+@ini_set('error_log', LOG_PATH);
+@ini_set('log_errors_max_len', '0');
+
+// ---------------------------------------------------------------------
 // Production safety: hide PHP version banner + disable unneeded warnings in
 // output. Hostinger php.ini may already do this, belt+suspenders here.
 // ---------------------------------------------------------------------

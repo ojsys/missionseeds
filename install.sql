@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
 INSERT IGNORE INTO admin_users (username, password_hash) VALUES
 ('admin', '$2y$10$uUFVxgFPKP/C/REZkRCrDOrqVmCRbVDs1nb1BrUssK.WodDLguyh.');
 
-INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
+INSERT INTO settings (setting_key, setting_value) VALUES
 ('site_title',        'Seedlings'),
 ('tagline',            'Growing Local. Flourishing Together.'),
 
@@ -85,7 +85,8 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('whatsapp_number',    '2348137912872'),
 ('whatsapp_display',   '+234 813 791 2872'),
 
-('footer_tagline',     'Planting hope. Growing enterprises. Transforming communities for generations.');
+('footer_tagline',     'Planting hope. Growing enterprises. Transforming communities for generations.')
+ON DUPLICATE KEY UPDATE setting_value = settings.setting_value;
 
 INSERT IGNORE INTO list_items (group_key, icon_key, title, body, sort_order) VALUES
 ('criteria', 'land',      NULL, 'Have land suitable for community enterprise.', 1),
